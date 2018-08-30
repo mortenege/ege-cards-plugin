@@ -11,7 +11,7 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 $ege_cards_config = [
-  'version' => '20180829'
+  'version' => '20180830'
 ];
 
 $ege_card_meta_names = [
@@ -49,9 +49,9 @@ function ege_cards_create_post_type() {
 
   $supports = ['title', 'editor', 'thumbnail'];
 
-  register_post_type( 'ege_card',
+  register_post_type( 'travelcard',
     array(
-      'taxonomies' => array('category', 'post_tag'),
+      'taxonomies' => array('card_category', 'card_tag'),
       'register_meta_box_cb' => 'ege_cards_meta_box',
       'labels' => $labels,
       'public' => true,
@@ -108,7 +108,7 @@ function ege_cards_meta_box (WP_Post $post) {
 function ege_cards_post_title_placeholder ( $title ) {
   $screen = get_current_screen();
 
-  if  ( 'ege_card' == $screen->post_type ) {
+  if  ( 'travelcard' == $screen->post_type ) {
       $title = 'Enter Travel Card name here';
   }
 
@@ -119,13 +119,13 @@ add_filter( 'enter_title_here', 'ege_cards_post_title_placeholder');
 function ege_cards_post_help_tab () {
     $screen = get_current_screen();
 
-    if ( 'ege_card' != $screen->post_type )
+    if ( 'travelcard' != $screen->post_type )
         return;
 
     $args = [
-        'id'      => 'ege_card',
+        'id'      => 'travelcard',
         'title'   => 'Travel Cards Help',
-        'content' => '<h3>Add/Edit Travel Card</h3><p>Enter the information below</p>',
+        'content' => file_get_contents(__DIR__ . '/templates/help.php'),
     ];
 
     $screen->add_help_tab( $args );
@@ -136,7 +136,7 @@ function ege_cards_post_updated_messages ($messages) {
   global $post, $post_ID;
   $link = esc_url( get_permalink($post_ID) );
 
-  $messages['ege_card'] = array(
+  $messages['travelcard'] = array(
       0 => '',
       1 => sprintf( __('Card updated. <a href="%s">View card</a>'), $link ),
       2 => __('Custom field updated.'),
@@ -154,7 +154,7 @@ function ege_cards_post_updated_messages ($messages) {
 add_filter( 'post_updated_messages', 'ege_cards_post_updated_messages');
 
 function ege_cards_post_bulk_messages ( $bulk_messages, $bulk_counts ) {
-  $bulk_messages['ege_card'] = array(
+  $bulk_messages['travelcard'] = array(
       'updated'   => _n( "%s card updated.", "%s cards updated.", $bulk_counts["updated"] ),
       'locked'    => _n( "%s card not updated, somebody is editing it.", "%s cards not updated, somebody is editing them.", $bulk_counts["locked"] ),
       'deleted'   => _n( "%s card permanently deleted.", "%s cards permanently deleted.", $bulk_counts["deleted"] ),
@@ -172,7 +172,7 @@ function ege_cards_save_card ($post_id){
   $is_revision = wp_is_post_revision($post_id);
 
   // Do not save meta for a revision or on autosave
-  if ( $post->post_type != 'ege_card' || $is_revision )
+  if ( $post->post_type != 'travelcard' || $is_revision )
       return;
 
   // Secure with nonce field check
@@ -197,3 +197,139 @@ function ege_cards_save_card ($post_id){
   }
 }
 add_action('save_post', 'ege_cards_save_card');
+
+function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
+  // bootstrap  
+  wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
+  wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
+
+  // normalize attribute keys, lowercase
+  $atts = array_change_key_case((array)$atts, CASE_LOWER);
+  // override default attributes with user attributes
+  $parsed_atts = shortcode_atts([], $atts, $tag);
+
+  $filename = '/templates/cards.php';
+
+  ob_start();
+  require_once(dirname(__FILE__) . $filename);
+  return ob_get_clean();   
+  // return '<h2>Hello, World</h2>';
+}
+add_shortcode( 'ege_cards', 'ege_cards_basic_shortcode');
+
+
+function ege_cards_create_taxonomies() {
+  // Add new taxonomy, make it hierarchical (like categories)
+  $labels = array(
+    'name'              => _x( 'Card Categories', 'taxonomy general name', 'textdomain' ),
+    'singular_name'     => _x( 'Card Category', 'taxonomy singular name', 'textdomain' ),
+    'search_items'      => __( 'Search Card Categories', 'textdomain' ),
+    'all_items'         => __( 'All Card Categories', 'textdomain' ),
+    'parent_item'       => __( 'Parent Card Category', 'textdomain' ),
+    'parent_item_colon' => __( 'Parent Card Category:', 'textdomain' ),
+    'edit_item'         => __( 'Edit Card Category', 'textdomain' ),
+    'update_item'       => __( 'Update Card Category', 'textdomain' ),
+    'add_new_item'      => __( 'Add New Card Category', 'textdomain' ),
+    'new_item_name'     => __( 'New Card Category Name', 'textdomain' ),
+    'menu_name'         => __( 'Card Category', 'textdomain' ),
+  );
+
+  $args = array(
+    'hierarchical'      => true,
+    'labels'            => $labels,
+    'show_ui'           => true,
+    'show_admin_column' => true,
+    'query_var'         => true,
+    'rewrite'           => array( 'slug' => 'category' ),
+  );
+
+  register_taxonomy( 'card_category', array( 'travelcard' ), $args );
+
+  // Add 'card tags' taxonomy
+  $labels = array(
+    'name'                       => _x( 'Card Tags', 'taxonomy general name', 'textdomain' ),
+    'singular_name'              => _x( 'Card Tag', 'taxonomy singular name', 'textdomain' ),
+    'search_items'               => __( 'Search Card Tags', 'textdomain' ),
+    'popular_items'              => __( 'Popular Card Tags', 'textdomain' ),
+    'all_items'                  => __( 'All Card Tags', 'textdomain' ),
+    'parent_item'                => null,
+    'parent_item_colon'          => null,
+    'edit_item'                  => __( 'Edit Card Tag', 'textdomain' ),
+    'update_item'                => __( 'Update Card Tag', 'textdomain' ),
+    'add_new_item'               => __( 'Add New Card Tag', 'textdomain' ),
+    'new_item_name'              => __( 'New Card Tag Name', 'textdomain' ),
+    'separate_items_with_commas' => __( 'Separate card tags with commas', 'textdomain' ),
+    'add_or_remove_items'        => __( 'Add or remove card tags', 'textdomain' ),
+    'choose_from_most_used'      => __( 'Choose from the most used card tags', 'textdomain' ),
+    'not_found'                  => __( 'No card tags found.', 'textdomain' ),
+    'menu_name'                  => __( 'Card Tags', 'textdomain' ),
+  );
+
+  $args = array(
+    'hierarchical'          => false,
+    'labels'                => $labels,
+    'show_ui'               => true,
+    'show_admin_column'     => true,
+    'update_count_callback' => '_update_post_term_count',
+    'query_var'             => true,
+    'rewrite'               => array( 'slug' => 'card_tag' ),
+  );
+
+  register_taxonomy( 'card_tag', 'travelcard', $args );
+}
+add_action( 'init', 'ege_cards_create_taxonomies', 0 );
+
+function ege_cards_search_cards () {
+  $args = [
+      'post_type' => 'travelcard',
+      'post_status' => 'publish',
+      'numberposts' => -1
+  ];
+
+  $category = isset($_GET['category']) ? $_GET['category'] : null;
+  $tag = isset($_GET['tag']) ? $_GET['tag'] : null;
+  if ($tag && $category) {
+    $args['tax_query'] = array(
+      'relation' => 'AND',
+      array(
+          'taxonomy' => 'card_category',
+          'field' => 'slug',
+          'terms' => $category,
+      ),
+      array(
+          'taxonomy' => 'card_tag',
+          'field' => 'slug',
+          'terms' => $tag,
+      )
+    );
+  } elseif ($tag) {
+    var_dump($tag);
+    $args['tax_query'] = array(
+      array(
+          'taxonomy' => 'card_tag',
+          'field' => 'slug',
+          'terms' => $tag,
+      )
+    );
+  } elseif ($category) {
+    $args['tax_query'] = array(
+      array(
+          'taxonomy' => 'card_category',
+          'field' => 'slug',
+          'terms' => $category,
+      )
+    );
+  }
+  $search = isset($_GET['search']) ? $_GET['search'] : null;
+  if ($search) {
+    $args['s'] = $search;
+  }
+
+  $posts  = get_posts($args);
+  
+  include __DIR__ . '/templates/cards-ajax.php';
+  wp_die();
+}
+
+add_action('wp_ajax_nopriv_ege_cards_search_cards','ege_cards_search_cards');
+add_action('wp_ajax_ege_cards_search_cards','ege_cards_search_cards');
