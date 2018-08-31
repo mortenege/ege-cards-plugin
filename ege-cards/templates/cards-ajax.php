@@ -1,12 +1,3 @@
-<?php
-/*
-Author:       Morten Ege Jensen <ege.morten@gmail.com>
-Author URI:   https://github.com/mortenege
-License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
-*/
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-?>
-
 <?php if (empty($posts)): ?>
   <div class="alert alert-info">No cards found with these criteria</div>
 <?php else: ?>

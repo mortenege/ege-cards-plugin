@@ -1,20 +1,13 @@
 <?php
-/*
-Author:       Morten Ege Jensen <ege.morten@gmail.com>
-Author URI:   https://github.com/mortenege
-License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
-*/
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+  $terms = get_terms([
+    'taxonomy' => 'card_category',
+    'hide_empty' => true,
+  ]);
 
-$terms = get_terms([
-  'taxonomy' => 'card_category',
-  'hide_empty' => true,
-]);
-
-$tags = get_terms([
-  'taxonomy' => 'card_tag',
-  'hide_empty' => true,
-]);
+  $tags = get_terms([
+    'taxonomy' => 'card_tag',
+    'hide_empty' => true,
+  ]);
 ?>
 
 <div class="card w-100 mb-4">
