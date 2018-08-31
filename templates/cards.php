@@ -55,25 +55,92 @@
 
 <style>
 .ege-card {
+  position: relative;
   text-align: left;
-  margin: 2px;
-  padding: 10px;
-  padding-top: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.3);
+  background-color: rgb(241, 241, 243);
+  height: 100%;
+  width: 100%;
 }
-
-.ege-card-title {
+.ege-card-callout {
+  background-color: rgb(77, 124, 228);
+  font-weight: 600;
+  font-size: 18px;
+  color: white;
+  padding: 5px;
   text-align: center;
+  margin-bottom: 20px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
+.ege-card-image {
+  margin: 0 auto;
+  width: 150px;
+  height: 100px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ege-card-title {
+  text-align: left;
+  margin: 0 20px;
+  font-weight: 600;
+}
 .ege-card-header {
-  font-weight: 800;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 14px;
+  margin: 0 20px;
 }
-
 .ege-card-text {
+  line-height: 12px;
   font-size: 12px;
+  margin: 0 20px;
+}
+.ege-card-text + .ege-card-header {
+  margin-top: 10px;
+}
+.ege-card-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  height: 80px;
+  padding: 0 20px;
+}
+.ege-card-apply-btn,
+.ege-card-apply-btn:hover,
+.ege-card-apply-btn:active,
+.ege-card-apply-btn:focus,
+.ege-card-apply-btn:visited {
+  background-color: rgb(42, 42, 68);
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  margin: 0 auto;
+  display: block;
+  width: 100%;
+  box-shadow: none;
+  border-radius: 0;
+  transition: border-radius 0.4s;
+}
+.ege-card-apply-btn:hover {
+  text-decoration: underline;
+  border-radius: 5px;
+}
+.ege-card-terms-link,
+.ege-card-terms-link:active,
+.ege-card-terms-link:focus,
+.ege-card-terms-link:visited,
+.ege-card-terms-link:hover {
+  font-size: 10px;
+  color: #000;
+  text-decoration: none;
+}
+.ege-card-terms-link:hover {
+  text-decoration: underline;
 }
 </style>
 
@@ -114,7 +181,6 @@ jQuery(document).ready(function($){
       category: $selectCategory.val()
     }
     var url = "<?= admin_url('admin-ajax.php'); ?>";
-    console.log('-------->', url, data);
 
     $cardContainer.empty();
     $cardContainer.html('Loading...');

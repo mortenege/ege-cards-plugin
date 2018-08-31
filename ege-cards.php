@@ -51,11 +51,12 @@ function ege_cards_create_post_type() {
 
   register_post_type( 'travelcard',
     array(
+      'rewrite' => ['slug' => 'travelcard'],
       'taxonomies' => array('card_category', 'card_tag'),
       'register_meta_box_cb' => 'ege_cards_meta_box',
       'labels' => $labels,
       'public' => true,
-      'has_archive' => true,
+      'has_archive' => false,
       'menu_icon' => 'dashicons-id',
       'supports' => $supports
     )
@@ -240,7 +241,7 @@ function ege_cards_create_taxonomies() {
     'show_ui'           => true,
     'show_admin_column' => true,
     'query_var'         => true,
-    'rewrite'           => array( 'slug' => 'category' ),
+    'rewrite'           => array( 'slug' => 'card_category' ),
   );
 
   register_taxonomy( 'card_category', array( 'travelcard' ), $args );
@@ -303,7 +304,7 @@ function ege_cards_search_cards () {
       )
     );
   } elseif ($tag) {
-    var_dump($tag);
+    
     $args['tax_query'] = array(
       array(
           'taxonomy' => 'card_tag',
