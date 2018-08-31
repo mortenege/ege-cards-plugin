@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
     $term_link = $term_link ? $term_link : '#';
   ?>
 
-  <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2" style="padding: 10px 5px;">
+  <div class="col-12 col-sm-6 col-md-4 col-lg-3" style="padding: 10px 5px;">
     <div class="ege-card">
       <div class="ege-card-callout"><?= strtoupper($the_meta['callout'][0]); ?></div>
       <div class="ege-card-image"style="background-image: url('<?= get_the_post_thumbnail_url($post); ?>');" >

@@ -1,3 +1,0 @@
-# README
-
-Nothing here yet

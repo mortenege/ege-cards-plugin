@@ -334,3 +334,23 @@ function ege_cards_search_cards () {
 
 add_action('wp_ajax_nopriv_ege_cards_search_cards','ege_cards_search_cards');
 add_action('wp_ajax_ege_cards_search_cards','ege_cards_search_cards');
+
+function ege_cards_filter_hidden_boxes ($hidden, $screen, $use_defaults) {
+  global $wp_meta_boxes;
+  $cpt = 'travelcard'; // Modify this to your needs!
+  $keep = array('postimagediv', 'tagsdiv-card_tag', 'card_categorydiv', 'submitdiv', 'ege_card_meta');
+  if( $cpt === $screen->id && isset( $wp_meta_boxes[$cpt] ) ){
+    $tmp = array();
+    foreach( (array) $wp_meta_boxes[$cpt] as $context_key => $context_item ){
+      foreach( $context_item as $priority_key => $priority_item ){
+        foreach( $priority_item as $metabox_key => $metabox_item )
+          if (!in_array($metabox_key, $keep)) {
+            $tmp[] = $metabox_key;
+          }
+      }
+    }
+    $hidden = $tmp;  // Override the current user option here.
+  }
+  return $hidden;
+}
+add_filter( 'hidden_meta_boxes', 'ege_cards_filter_hidden_boxes', 10, 3 );
