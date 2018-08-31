@@ -3,17 +3,20 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20180829
+Version:      20180831
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 */
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+// Set up Config and version number
 $ege_cards_config = [
-  'version' => '20180830'
+  'version' => '20180831'
 ];
 
+// Setup meta fields to be stored for each card
+// + default POST field
 $ege_card_meta_names = [
   'callout' => 'Callout text',
   'issuer' => 'Bank/Issuer name',
@@ -23,6 +26,9 @@ $ege_card_meta_names = [
   'bonus_value' => 'Bonus value text'
 ];
 
+/**
+ * Create Custom Post type: travelcard
+ */
 function ege_cards_create_post_type() {
   $plural = 'Travel Cards';
   $singular = 'Travel Card';
@@ -61,11 +67,13 @@ function ege_cards_create_post_type() {
       'supports' => $supports
     )
   );
-
-  //TODO: register taxonomy
 }
 add_action( 'init', 'ege_cards_create_post_type' );
 
+/**
+ * Custom meta box HTML
+ * @param  WP_Post $post
+ */
 function ege_cards_post_meta_box_html ($post) {
   global $ege_card_meta_names;
   $field_names = $ege_card_meta_names;
@@ -98,6 +106,10 @@ function ege_cards_post_meta_box_html ($post) {
   <?php
 }
 
+/**
+ * Add Meta Box
+ * @param  WP_Post $post
+ */
 function ege_cards_meta_box (WP_Post $post) {
   add_meta_box(
     'ege_card_meta',
@@ -106,6 +118,11 @@ function ege_cards_meta_box (WP_Post $post) {
   );
 }
 
+/**
+ * Filter POST title placeholder
+ * @param  String $title
+ * @return String
+ */
 function ege_cards_post_title_placeholder ( $title ) {
   $screen = get_current_screen();
 
@@ -117,6 +134,9 @@ function ege_cards_post_title_placeholder ( $title ) {
 }
 add_filter( 'enter_title_here', 'ege_cards_post_title_placeholder');
 
+/**
+ * Create POST "help" tab
+ */
 function ege_cards_post_help_tab () {
     $screen = get_current_screen();
 
@@ -133,6 +153,11 @@ function ege_cards_post_help_tab () {
 }
 add_action('admin_head', 'ege_cards_post_help_tab');
 
+/**
+ * Set all messages related to updating travelcard
+ * @param  Array $messages [description]
+ * @return Array
+ */
 function ege_cards_post_updated_messages ($messages) {
   global $post, $post_ID;
   $link = esc_url( get_permalink($post_ID) );
@@ -154,6 +179,12 @@ function ege_cards_post_updated_messages ($messages) {
 }
 add_filter( 'post_updated_messages', 'ege_cards_post_updated_messages');
 
+/**
+ * Set all bulk update messages for travelcard
+ * @param  Array $bulk_messages
+ * @param  [type] $bulk_counts   [description]
+ * @return Array
+ */
 function ege_cards_post_bulk_messages ( $bulk_messages, $bulk_counts ) {
   $bulk_messages['travelcard'] = array(
       'updated'   => _n( "%s card updated.", "%s cards updated.", $bulk_counts["updated"] ),
@@ -167,6 +198,10 @@ function ege_cards_post_bulk_messages ( $bulk_messages, $bulk_counts ) {
 }
 add_filter( 'bulk_post_updated_messages', 'ege_cards_post_bulk_messages', 10, 2 );
 
+/**
+ * 'Save POST' hook
+ * @param  Integer $post_id
+ */
 function ege_cards_save_card ($post_id){
   global $ege_card_meta_names;
   $post = get_post($post_id);
@@ -199,6 +234,13 @@ function ege_cards_save_card ($post_id){
 }
 add_action('save_post', 'ege_cards_save_card');
 
+/**
+ * The widget shortcode
+ * @param  array  $atts    [description]
+ * @param  string $content [description]
+ * @param  string $tag     [description]
+ * @return [type]          [description]
+ */
 function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
   // bootstrap  
   wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
@@ -214,11 +256,12 @@ function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
   ob_start();
   require_once(dirname(__FILE__) . $filename);
   return ob_get_clean();   
-  // return '<h2>Hello, World</h2>';
 }
 add_shortcode( 'ege_cards', 'ege_cards_basic_shortcode');
 
-
+/**
+ * Register custom taxonomies
+ */
 function ege_cards_create_taxonomies() {
   // Add new taxonomy, make it hierarchical (like categories)
   $labels = array(
@@ -280,6 +323,10 @@ function ege_cards_create_taxonomies() {
 }
 add_action( 'init', 'ege_cards_create_taxonomies', 0 );
 
+/**
+ * AJAX call to fetch cards
+ * GET parameters: search, category, tag
+ */
 function ege_cards_search_cards () {
   $args = [
       'post_type' => 'travelcard',
@@ -331,10 +378,16 @@ function ege_cards_search_cards () {
   include __DIR__ . '/templates/cards-ajax.php';
   wp_die();
 }
-
 add_action('wp_ajax_nopriv_ege_cards_search_cards','ege_cards_search_cards');
 add_action('wp_ajax_ege_cards_search_cards','ege_cards_search_cards');
 
+/**
+ * Add hack to hide other meta boxes
+ * @param  Array      $hidden
+ * @param  WP_Screen  $screen
+ * @param  Bool       $use_defaults
+ * @return Array
+ */
 function ege_cards_filter_hidden_boxes ($hidden, $screen, $use_defaults) {
   global $wp_meta_boxes;
   $cpt = 'travelcard'; // Modify this to your needs!
