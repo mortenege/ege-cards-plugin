@@ -1,0 +1,161 @@
+.ege-card {
+  position: relative;
+  text-align: left;
+  background-color: rgb(241, 241, 243);
+  height: 100%;
+  width: 100%;
+}
+.ege-card .ege-card-callout {
+  background-color: rgb(77, 124, 228);
+  font-family: "Montserrat", arial, sans serif;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 22px;
+  color: #FFF;
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 0 5px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ege-card .ege-card-image {
+  margin: 0 auto;
+  width: 150px;
+  height: 100px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.ege-card .ege-card-title {
+  line-height: 29px;
+  font-size: 24px;
+  font-family: "Montserrat", arial, sans serif;
+  font-weight: bold;
+  color: #212529;
+  text-align: left;
+  margin: 0 20px;
+}
+.ege-card .ege-card-header {
+  font-family: "Opensans", Arial, Helvetics, sans serif;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 14px;
+  color: #212529;
+  margin: 0 20px;
+}
+.ege-card .ege-card-text {
+  font-family: "Opensans", Arial, Helvetics, sans serif;
+  font-weight: normal;
+  line-height: 14px;
+  font-size: 14px;
+  margin: 0 20px;
+}
+.ege-card .ege-card-text + .ege-card-header {
+  margin-top: 10px;
+}
+.ege-card .ege-card-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  height: 80px;
+  padding: 0 20px;
+}
+.ege-card .ege-card-apply-btn,
+.ege-card .ege-card-apply-btn:hover,
+.ege-card .ege-card-apply-btn:active,
+.ege-card .ege-card-apply-btn:focus,
+.ege-card .ege-card-apply-btn:visited {
+  background-color: rgb(42, 42, 68);
+  font-family: "Montserrat", Arial, Helvetics, sans serif;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 22px;
+  color: #FFF;
+  padding: 10px 20px;
+  margin: 0 auto;
+  display: block;
+  width: 100%;
+  box-shadow: none;
+  border-radius: 0;
+  transition: border-radius 0.4s;
+}
+.ege-card .ege-card-apply-btn:hover {
+  text-decoration: underline;
+  border-radius: 5px;
+}
+.ege-card .ege-card-terms-link,
+.ege-card .ege-card-terms-link:active,
+.ege-card .ege-card-terms-link:focus,
+.ege-card .ege-card-terms-link:visited,
+.ege-card .ege-card-terms-link:hover {
+  font-size: 10px;
+  line-height: 10px;
+  color: #212529;
+  font-family: "Opensans", Arial, Helvetics, sans serif;
+  font-weight: normal;
+  text-decoration: none;
+}
+.ege-card .ege-card-terms-link:hover {
+  text-decoration: underline;
+}
+
+.ege-cards-search-form {
+  width: 100%;
+  font-size: 12px;
+  display: block;
+}
+.ege-cards-search-form .ege-cards-form-group {
+  display: block;
+}
+.ege-cards-search-form .ege-cards-search-label {
+  font-weight: 800;
+  display: block;
+}
+.ege-cards-search-form .ege-cards-search-select {
+  font-size: 12px;
+}
+.ege-cards-search-form .ege-cards-search-input {
+  font-size: 12px;
+  line-height: 1.5rem;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+@media only screen and (min-width: 768px) {
+  .ege-cards-search-form {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .ege-cards-search-form .ege-cards-form-group {
+    display: inline;
+  }
+  .ege-cards-search-form .ege-cards-search-label {
+    margin-right:5px;
+    display: inline;
+  }
+  .ege-cards-search-form .ege-cards-search-select {
+    width: auto;
+    display: inline;
+  }
+  .ege-cards-search-form .ege-cards-search-input {
+    width: 100%;
+  }
+}
+@media only screen and (min-width: 992px) {
+  .ege-cards-search-form {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+  .ege-cards-search-form .ege-cards-search-label {}
+  .ege-cards-search-form .ege-cards-search-input {
+    min-width: 300px;
+    margin-top: 0;
+    width: auto;
+  }
+}

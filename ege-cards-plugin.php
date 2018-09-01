@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20180831
+Version:      20180901
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set up Config and version number
 $ege_cards_config = [
-  'version' => '20180831'
+  'version' => '20180901'
 ];
 
 // Setup meta fields to be stored for each card
@@ -242,9 +242,13 @@ add_action('save_post', 'ege_cards_save_card');
  * @return [type]          [description]
  */
 function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
+  global $ege_cards_config;
   // bootstrap  
   wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
   wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
+
+  // style
+  wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', array('bootstrap'), $ege_cards_config['version']);
 
   // normalize attribute keys, lowercase
   $atts = array_change_key_case((array)$atts, CASE_LOWER);
