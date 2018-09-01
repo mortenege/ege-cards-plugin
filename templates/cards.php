@@ -17,46 +17,42 @@ $tags = get_terms([
 ]);
 ?>
 
-<div class="card w-100 mb-4">
-  <div class="card-body">
-    <div class="form-row">
-      <div class="col-12">
-        <div class="form-group">
-          <input type="text" name="search" id="ege-cards-search" placeholder="Search Card Name" class="form-control"/>
-        </div>
-      </div>
-      <div class="col-12 col-sm-6">
-        <div class="form-group">
-          <label>Filter by Category</label>
-          <select class="form-control" id="ege-cards-category">
-            <option value="" selected>All Categories</option>
-            <?php foreach ($terms as $term): ?>
-              <?php if ($term->parent === 0): ?>
-                <option value="<?= $term->slug; ?>"><?= $term->name ?></option>
-                <?php foreach ($terms as $child): ?>
-                  <?php if ($child->parent === $term->term_id): ?>
-                    <option value="<?= $child->slug; ?>">&nbsp;&nbsp;<?= $child->name ?></option>
-                  <?php endif; ?>
-                <?php endforeach; ?>
+<div class="w-100 mb-4">
+  <form class="ege-cards-search-form">
+    <div class="ege-cards-form-group">
+      <label class="ege-cards-search-label">Select card category:</label>
+      <select class="form-control ege-cards-search-select" id="ege-cards-category">
+        <option value="" selected>All Categories</option>
+        <?php foreach ($terms as $term): ?>
+          <?php if ($term->parent === 0): ?>
+            <option value="<?= $term->slug; ?>"><?= $term->name ?></option>
+            <?php foreach ($terms as $child): ?>
+              <?php if ($child->parent === $term->term_id): ?>
+                <option value="<?= $child->slug; ?>">&nbsp;&nbsp;<?= $child->name ?></option>
               <?php endif; ?>
             <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
-      <div class="col-12 col-sm-6">
-        <div class="form-group">
-          <label>Filter by Annual Fee</label>
-          <select class="form-control" id="ege-cards-tag">
-            <option value="" selected>All Tags</option>
-            <?php foreach ($tags as $tag): ?>
-              <option value="<?= $tag->slug; ?>"><?= $tag->name ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </select>
     </div>
-  </div>
+      
+    <div class="ege-cards-form-group">
+      <label class="ege-cards-search-label">Select Annual Fee:</label>
+      <select class="form-control ege-cards-search-select" id="ege-cards-tag">
+        <option value="" selected>All Fees</option>
+        <?php foreach ($tags as $tag): ?>
+          <option value="<?= $tag->slug; ?>"><?= $tag->name ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+      
+    
+    <input type="text" name="search" id="ege-cards-search" placeholder="Search card name" class="form-control ege-cards-search-input"/>
+    
+  </form>
+  <hr style="background-color: #212529;"/>
 </div>
+
 
 <div id="ege-cards-list">Loading...</div>
 
@@ -70,13 +66,15 @@ $tags = get_terms([
 }
 .ege-card-callout {
   background-color: rgb(77, 124, 228);
-  font-weight: 600;
+  font-family: "Montserrat", arial, sans serif;
+  font-weight: bold;
   font-size: 18px;
-  color: white;
-  padding: 5px;
+  line-height: 22px;
+  color: #FFF;
   text-align: center;
   margin-bottom: 20px;
-  min-height: 100px;
+  padding: 0 5px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,19 +88,27 @@ $tags = get_terms([
   background-size: contain;
 }
 .ege-card-title {
+  line-height: 29px;
+  font-size: 24px;
+  font-family: "Montserrat", arial, sans serif;
+  font-weight: bold;
+  color: #212529;
   text-align: left;
   margin: 0 20px;
-  font-weight: 600;
 }
 .ege-card-header {
-  font-weight: 700;
+  font-family: "Opensans", Arial, Helvetics, sans serif;
+  font-weight: bold;
   font-size: 14px;
   line-height: 14px;
+  color: #212529;
   margin: 0 20px;
 }
 .ege-card-text {
-  line-height: 12px;
-  font-size: 12px;
+  font-family: "Opensans", Arial, Helvetics, sans serif;
+  font-weight: normal;
+  line-height: 14px;
+  font-size: 14px;
   margin: 0 20px;
 }
 .ege-card-text + .ege-card-header {
@@ -123,8 +129,11 @@ $tags = get_terms([
 .ege-card-apply-btn:focus,
 .ege-card-apply-btn:visited {
   background-color: rgb(42, 42, 68);
-  color: white;
-  font-weight: 600;
+  font-family: "Montserrat", Arial, Helvetics, sans serif;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 22px;
+  color: #FFF;
   padding: 10px 20px;
   margin: 0 auto;
   display: block;
@@ -143,11 +152,71 @@ $tags = get_terms([
 .ege-card-terms-link:visited,
 .ege-card-terms-link:hover {
   font-size: 10px;
-  color: #000;
+  line-height: 10px;
+  color: #212529;
+  font-family: "Opensans", Arial, Helvetics, sans serif;
+  font-weight: normal;
   text-decoration: none;
 }
 .ege-card-terms-link:hover {
   text-decoration: underline;
+}
+
+.ege-cards-search-form {
+  font-size: 12px;
+  display: block;
+}
+.ege-cards-form-group {
+  display: block;
+}
+.ege-cards-search-label {
+  font-weight: 800;
+  display: block;
+}
+.ege-cards-search-select {
+  font-size: 12px;
+}
+.ege-cards-search-input {
+  font-size: 12px;
+  line-height: 1.5rem;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+@media only screen and (min-width: 768px) {
+  .ege-cards-search-form {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .ege-cards-form-group {
+    display: inline;
+  }
+  .ege-cards-search-label {
+    margin-right:5px;
+    display: inline;
+  }
+  .ege-cards-search-select {
+    width: auto;
+    display: inline;
+  }
+  .ege-cards-search-input {
+    width: 100%;
+  }
+}
+@media only screen and (min-width: 992px) {
+  .ege-cards-search-form {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+  .ege-cards-search-label {}
+  .ege-cards-search-input {
+    min-width: 300px;
+    margin-top: 0;
+    width: auto;
+  }
+  .ege-cards-search-select {}
 }
 </style>
 
