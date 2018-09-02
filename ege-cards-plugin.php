@@ -53,7 +53,7 @@ function ege_cards_create_post_type() {
     'uploaded_to_this_item' => "Uploaded to this $s_lower",
   ];
 
-  $supports = ['title', 'editor', 'thumbnail'];
+  $supports = ['title', 'editor', 'thumbnail', 'excerpt'];
 
   register_post_type( 'travelcard',
     array(
@@ -259,7 +259,7 @@ function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
 
   ob_start();
   require_once(dirname(__FILE__) . $filename);
-  return ob_get_clean();   
+  return ob_get_clean();
 }
 add_shortcode( 'ege_cards', 'ege_cards_basic_shortcode');
 
@@ -395,7 +395,7 @@ add_action('wp_ajax_ege_cards_search_cards','ege_cards_search_cards');
 function ege_cards_filter_hidden_boxes ($hidden, $screen, $use_defaults) {
   global $wp_meta_boxes;
   $cpt = 'travelcard'; // Modify this to your needs!
-  $keep = array('postimagediv', 'tagsdiv-card_tag', 'card_categorydiv', 'submitdiv', 'ege_card_meta');
+  $keep = array('postexcerpt', 'postimagediv', 'tagsdiv-card_tag', 'card_categorydiv', 'submitdiv', 'ege_card_meta');
   if( $cpt === $screen->id && isset( $wp_meta_boxes[$cpt] ) ){
     $tmp = array();
     foreach( (array) $wp_meta_boxes[$cpt] as $context_key => $context_item ){
@@ -411,3 +411,26 @@ function ege_cards_filter_hidden_boxes ($hidden, $screen, $use_defaults) {
   return $hidden;
 }
 add_filter( 'hidden_meta_boxes', 'ege_cards_filter_hidden_boxes', 10, 3 );
+
+function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
+  global $ege_cards_config;
+  // normalize attribute keys, lowercase
+  $atts = array_change_key_case((array)$atts, CASE_LOWER);
+  // override default attributes with user attributes
+  $parsed_atts = shortcode_atts([], $atts, $tag);
+
+  $filename = '/templates/sticky-card.php';
+  
+  $args = [
+    'post_type' => 'travelcard',
+    'post_status' => 'publish',
+    'numberposts' => 1
+  ];
+  $sticky_card = get_posts($args);
+  $sticky_card = $sticky_card[0];
+  
+  ob_start();
+  require_once(dirname(__FILE__) . $filename);
+  return ob_get_clean();   
+}
+add_shortcode('ege_cards_sticky_card', 'ege_cards_add_sticky_widget');

@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
   <div class="col-12 col-sm-6 col-md-4 col-lg-3" style="padding: 10px 5px;">
     <div class="ege-card">
       <div class="ege-card-callout"><?= strtoupper($the_meta['callout'][0]); ?></div>
-      <div class="ege-card-image"style="background-image: url('<?= get_the_post_thumbnail_url($post); ?>');" >
+      <div class="ege-card-image" style="background-image: url('<?= get_the_post_thumbnail_url($post); ?>');" >
       </div>
       <h3 class="ege-card-title mt-2 mb-2"><?= strtoupper($post->post_title); ?></h3>
       <div class="ege-card-header">Bonus</div>
