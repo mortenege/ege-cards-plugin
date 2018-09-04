@@ -1,11 +1,19 @@
+.ege-cards-grid {
+  display: block;
+}
+.ege-cards-col {
+  display: block;
+  width: 100%;
+}
 .ege-card {
   position: relative;
   text-align: left;
   background-color: rgb(241, 241, 243);
+  display: block;
   height: 100%;
-  width: 100%;
 }
 .ege-card .ege-card-callout {
+  display: block;
   background-color: rgb(77, 124, 228);
   font-family: "Montserrat", arial, sans serif;
   font-weight: bold;
@@ -21,6 +29,7 @@
   justify-content: center;
 }
 .ege-card .ege-card-image {
+  display: block;
   margin: 0 auto;
   width: 150px;
   height: 100px;
@@ -29,13 +38,14 @@
   background-size: contain;
 }
 .ege-card .ege-card-title {
+  display: block;
   line-height: 29px;
   font-size: 24px;
   font-family: "Montserrat", arial, sans serif;
   font-weight: bold;
   color: #212529;
   text-align: left;
-  margin: 0 20px;
+  margin: 10px 20px;
 }
 .ege-card .ege-card-header {
   font-family: "Opensans", Arial, Helvetics, sans serif;
@@ -81,10 +91,8 @@
   width: 100%;
   box-shadow: none;
   border-radius: 0;
-  transition: border-radius 0.4s;
 }
 .ege-card .ege-card-apply-btn:hover {
-  border-radius: 5px;
   background-color: #4d7ce4;
 }
 .ege-card .ege-card-terms-link,
@@ -104,9 +112,9 @@
 }
 
 .ege-cards-search-form {
+  display: none;
   width: 100%;
   font-size: 12px;
-  display: block;
 }
 .ege-cards-search-form .ege-cards-form-group {
   display: block;
@@ -119,22 +127,48 @@
 }
 .ege-cards-search-form input,
 .ege-cards-search-form select {
-  border-radius: 0;
+  display: block;
+  width: 100%;
   font-size: 12px;
-  min-width: 200px
+  padding: 4px;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0;
+  min-width: 200px;
+  box-sizing: border-box;
+  height: 28px;
+}
+.ege-cards-search-form select {
+  vertical-align: top;
 }
 .ege-cards-search-form .ege-cards-search-input {
-  font-size: 12px;
-  line-height: 1.5rem;
   display: block;
   width: 100%;
   margin-top: 10px;
 }
 
+@media only screen and (min-width: 576px) {
+  .ege-cards-grid {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-column-gap: 10px;
+    grid-row-gap: 20px;
+  }
+}
+
 @media only screen and (min-width: 768px) {
+  .ege-cards-grid {
+    display: grid;
+    grid-template-columns: 33.33% 33.33% 33.33%;
+    grid-column-gap: 10px;
+    grid-row-gap: 20px;
+  }
   .ege-cards-search-form {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
     flex-wrap: wrap;
   }
   .ege-cards-search-form .ege-cards-form-group {
@@ -154,6 +188,13 @@
 }
 
 @media only screen and (min-width: 992px) {
+  .ege-cards-grid {
+    display: grid;
+    grid-template-columns: 25% 25% 25% 25%;
+    grid-column-gap: 10px;
+    grid-row-gap: 20px;
+  }
+
   .ege-cards-search-form {
     display: flex;
     justify-content: space-between;
@@ -164,5 +205,143 @@
     min-width: 350px;
     margin-top: 0;
     width: auto;
+  }
+}
+
+/* Sticky Cards */
+#ege-sticky-card {
+  width: 100%;
+  background-color: #FFF;
+  font-family: "Welsheim", Arial, Helvetica, sans serif;
+  color: rgb(32, 32, 38);
+  border: 1px solid rgb(229, 229, 229);
+  border-top: 5px solid rgb(32, 32, 38);
+  padding: 5px;
+}
+#ege-sticky-card .ege-sticky-title {
+  display: block;
+  font-size: 30px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 36px;
+  margin-bottom: 20px;
+  color: rgb(32, 32, 38);
+}
+
+#ege-sticky-card .ege-sticky-table {
+  display: block;
+  margin-bottom: 20px;
+}
+#ege-sticky-card .ege-sticky-excerpt {
+  display: block;
+  width: 100%;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 200;
+  line-height: 33px;
+  margin-bottom: 20px;
+}
+#ege-sticky-card .ege-sticky-travelcard-container {
+  display: block;
+  width: 100%;
+}
+#ege-sticky-card .ege-sticky-travelcard {
+  display: block;
+  margin: 0 auto;
+  width: 150px;
+  height: 100px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+@media only screen and (min-width: 768px) {
+  #ege-sticky-card {
+    padding: 20px;
+  }
+  #ege-sticky-card .ege-sticky-table {
+    display: table;
+  }
+  #ege-sticky-card .ege-sticky-excerpt {
+    display: table-cell;
+    width: auto;
+    vertical-align: top;
+  }
+  #ege-sticky-card .ege-sticky-travelcard-container {
+    display: table-cell;
+    vertical-align: middle;
+    width: 300px;
+  }
+}
+
+#ege-sticky-card a.ege-sticky-apply-btn,
+#ege-sticky-card a.ege-sticky-apply-btn:hover
+#ege-sticky-card a.ege-sticky-apply-btn:active,
+#ege-sticky-card a.ege-sticky-apply-btn:focus,
+#ege-sticky-card a.ege-sticky-apply-btn:visited {
+  background-color: rgb(42, 42, 68);
+  text-decoration: none;
+  font-family: "Montserrat", Arial, Helvetics, sans serif;
+  font-weight: bold;
+  text-align: center;
+  font-size: 18px;
+  line-height: 22px;
+  color: #FFF;
+  padding: 10px 0px;
+  margin: 0 auto;
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: none;
+  border-radius: 0;
+  transition: border-radius 0.4s;
+}
+
+#ege-sticky-card a.ege-sticky-apply-btn:hover {
+  background-color: #4d7ce4;
+}
+
+#ege-sticky-card .phase {
+  height: 100px;
+  overflow-y: hidden;
+}
+#ege-sticky-card .phase.expand {
+  height: auto;
+  overflow-y: auto;
+}
+#ege-sticky-card .phase:not(.expand):before {
+  content:'';
+  width:100%;
+  height:100%;    
+  position:absolute;
+  left:0;
+  top:0;
+  background: -moz-linear-gradient(top, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 93%, rgba(255,255,255,1) 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(top, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 93%,rgba(255,255,255,1) 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 93%,rgba(255,255,255,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#ffffff',GradientType=0 );
+}
+#ege-sticky-card .ege-sticky-read-more-btn,
+#ege-sticky-card .ege-sticky-read-more-btn:hover,
+#ege-sticky-card .ege-sticky-read-more-btn:active,
+#ege-sticky-card .ege-sticky-read-more-btn:visited,
+#ege-sticky-card .ege-sticky-read-more-btn:focus {
+  background-color: #FFF;
+  color: rgb(32, 32, 38);
+  width: 100%;
+  box-shadow: none;
+}
+#ege-sticky-card .ege-sticky-read-more-btn:hover {
+  text-decoration: underline;
+}
+@media only screen and (min-width: 768px) {
+  #ege-sticky-card .phase {
+    height: 200px;
+  }
+  #ege-sticky-card .phase:not(.expand):before {
+    background: -moz-linear-gradient(top, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 93%, rgba(255,255,255,1) 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(top, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 93%,rgba(255,255,255,1) 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(to bottom, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 93%,rgba(255,255,255,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#ffffff',GradientType=0 );
   }
 }

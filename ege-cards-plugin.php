@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set up Config and version number
 $ege_cards_config = [
-  'version' => '20180904'
+  'version' => '201809042'
 ];
 
 // Setup meta fields to be stored for each card
@@ -282,11 +282,11 @@ add_action('save_post', 'ege_cards_save_card');
 function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
   global $ege_cards_config;
   // bootstrap  
-  wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
-  wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
+  // wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
+  // wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
 
   // style
-  wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', array('bootstrap'), $ege_cards_config['version']);
+  wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', null, $ege_cards_config['version']);
 
   // normalize attribute keys, lowercase
   $atts = array_change_key_case((array)$atts, CASE_LOWER);
@@ -452,6 +452,12 @@ add_filter( 'hidden_meta_boxes', 'ege_cards_filter_hidden_boxes', 10, 3 );
 
 function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
   global $ege_cards_config;
+  // bootstrap  
+  // wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
+  // wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
+  // style
+  wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', null, $ege_cards_config['version']);
+
   // normalize attribute keys, lowercase
   $atts = array_change_key_case((array)$atts, CASE_LOWER);
   // override default attributes with user attributes
@@ -459,13 +465,18 @@ function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
 
   $filename = '/templates/sticky-card.php';
   
-  $args = [
-    'post_type' => 'travelcard',
-    'post_status' => 'publish',
-    'numberposts' => 1
-  ];
-  $sticky_card = get_posts($args);
-  $sticky_card = $sticky_card[0];
+  $sticky_id = get_option('ege_cards_sticky_id', 0);
+  if (!$sticky_id) {
+    $args = [
+      'post_type' => 'travelcard',
+      'post_status' => 'publish',
+      'numberposts' => 1
+    ];
+    $sticky_card = get_posts($args);
+    $sticky_card = $sticky_card[0];
+  } else {
+    $sticky_card = get_post($sticky_id);
+  }
   
   ob_start();
   require_once(dirname(__FILE__) . $filename);

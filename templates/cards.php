@@ -17,11 +17,11 @@ $tags = get_terms([
 ]);
 ?>
 
-<div class="w-100 mb-4">
+<div style="width:100%;margin-bottom: 20px;">
   <form class="ege-cards-search-form">
     <div class="ege-cards-form-group">
       <label class="ege-cards-search-label">Select card category:</label>
-      <select class="form-control ege-cards-search-select" id="ege-cards-category">
+      <select class="ege-cards-search-select" id="ege-cards-category">
         <option value="" selected>All Categories</option>
         <?php foreach ($terms as $term): ?>
           <?php if ($term->parent === 0): ?>
@@ -38,7 +38,7 @@ $tags = get_terms([
       
     <div class="ege-cards-form-group">
       <label class="ege-cards-search-label">Select Annual Fee:</label>
-      <select class="form-control ege-cards-search-select" id="ege-cards-tag">
+      <select class="ege-cards-search-select" id="ege-cards-tag">
         <option value="" selected>All Fees</option>
         <?php foreach ($tags as $tag): ?>
           <option value="<?= $tag->slug; ?>"><?= $tag->name ?></option>
@@ -47,7 +47,7 @@ $tags = get_terms([
     </div>
       
     
-    <input type="text" name="search" id="ege-cards-search" placeholder="Search card name" class="form-control ege-cards-search-input"/>
+    <input type="text" name="search" id="ege-cards-search" placeholder="Search card name" class="ege-cards-search-input"/>
     
   </form>
   <hr style="background-color: #212529;"/>

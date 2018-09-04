@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 <?php if (empty($posts)): ?>
   <div class="alert alert-info">No cards found with these criteria</div>
 <?php else: ?>
-<div class="form-row">
+<div class="ege-cards-grid">
 <?php foreach ($posts as $post): ?>
   <?php
     $the_meta = get_post_meta($post->ID);
@@ -25,22 +25,23 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
     $term_link = is_array($term_link) ? $term_link[0] : $term_link;
     $term_link = $term_link ? $term_link : '#';
   ?>
-
-  <div class="col-12 col-sm-6 col-md-4 col-lg-3" style="padding: 10px 5px;">
+  <div class="ege-cards-col">
     <div class="ege-card">
-      <div class="ege-card-callout"><?= strtoupper($the_meta['callout'][0]); ?></div>
-      <div class="ege-card-image" style="background-image: url('<?= get_the_post_thumbnail_url($post); ?>');" >
-      </div>
-      <h3 class="ege-card-title mt-2 mb-2"><?= strtoupper($post->post_title); ?></h3>
+      <a href="<?= $deep_link; ?>" target="_blank" class="ege-card-callout"><?= strtoupper($the_meta['callout'][0]); ?></a>
+      <a href="<?= $deep_link; ?>" target="_blank" class="ege-card-image" style="background-image: url('<?= get_the_post_thumbnail_url($post); ?>');" >
+      </a>
+      <a href="<?= $deep_link; ?>" target="_blank" class="ege-card-title"><?= strtoupper($post->post_title); ?></a>
       <div class="ege-card-header">Bonus</div>
       <div class="ege-card-text"><?= $bonus_value; ?></div>
       <div class="ege-card-header">Annual Fee</div>
       <div class="ege-card-text"><?= $annual_fee; ?></div>
-      <div style="margin-bottom: 100px;"></div>
+      <div style="padding-bottom: 100px;"></div>
+      
       <div class="ege-card-footer">
-        <a href="<?= $deep_link; ?>"class="btn ege-card-apply-btn">APPLY NOW</a>
-        <a href="<?= $term_link; ?>" class="ege-card-terms-link">Terms and Conditions</a>
+        <a href="<?= $deep_link; ?>" target="_blank" class="btn ege-card-apply-btn">APPLY NOW</a>
+        <a href="<?= $term_link; ?>" target="_blank" class="ege-card-terms-link">Terms and Conditions</a>
       </div>
+    
     </div>
   </div>
 <?php endforeach; ?>
