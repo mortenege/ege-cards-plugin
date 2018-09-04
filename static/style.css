@@ -1,9 +1,13 @@
+.hide-on-mobile {
+  display: none;
+}
 .ege-cards-grid {
   display: block;
 }
 .ege-cards-col {
   display: block;
   width: 100%;
+  margin-bottom: 10px;
 }
 .ege-card {
   position: relative;
@@ -85,7 +89,7 @@
   font-size: 18px;
   line-height: 22px;
   color: #FFF;
-  padding: 10px 20px;
+  padding: 10px 0px;
   margin: 0 auto;
   display: block;
   width: 100%;
@@ -159,6 +163,9 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .hide-on-mobile {
+    display: block;
+  }
   .ege-cards-grid {
     display: grid;
     grid-template-columns: 33.33% 33.33% 33.33%;

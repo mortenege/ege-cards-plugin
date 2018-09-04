@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set up Config and version number
 $ege_cards_config = [
-  'version' => '201809042'
+  'version' => '201809043'
 ];
 
 // Setup meta fields to be stored for each card

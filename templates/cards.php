@@ -50,7 +50,9 @@ $tags = get_terms([
     <input type="text" name="search" id="ege-cards-search" placeholder="Search card name" class="ege-cards-search-input"/>
     
   </form>
-  <hr style="background-color: #212529;"/>
+  
+  <hr class="hide-on-mobile" style="background-color: #212529;"/>
+
 </div>
 
 
