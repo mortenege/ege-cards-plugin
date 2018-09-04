@@ -12,14 +12,14 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set up Config and version number
 $ege_cards_config = [
-  'version' => '20180901'
+  'version' => '20180902'
 ];
 
 // Setup meta fields to be stored for each card
 // + default POST field
 $ege_card_meta_names = [
   'callout' => 'Callout text',
-  'issuer' => 'Bank/Issuer name',
+  'long_title' => 'Long Title',
   'deep_link' => 'Deep Link',
   'term_link' => 'Link to Terms',
   'annual_fee' => 'Annual Fee text',
@@ -87,6 +87,8 @@ function ege_cards_post_meta_box_html ($post) {
   }
   
   // wp_nonce_field('ege_card_nonce', 'ege_card_nonce');
+  $sticky_id = get_option('ege_cards_sticky_id', 0);
+  $is_sticky = $post->ID === $sticky_id ? '1' : '0';
   ?>
   <table class="form-table">
     <?php foreach ($field_names as $name => $text): ?>
@@ -103,6 +105,40 @@ function ege_cards_post_meta_box_html ($post) {
     </tr>
     <?php endforeach; ?>
   </table>
+  
+  <hr style="margin: 20px 0;"/>
+
+  <div data-is-sticky="<?= $is_sticky; ?>">
+    <div class="show-if-sticky"><strong>This card has been selected as <em>Sticky</em></strong></div>
+    <button class="hide-if-sticky" id="ege-cards-admin-make-sticky-btn">Make me sticky</button>
+  </div>
+  <style>
+    div[data-is-sticky="0"] .show-if-sticky {
+      display: none;
+    }
+    div[data-is-sticky="1"] .hide-if-sticky {
+      display: none;
+    }
+  </style>
+  <script>
+    jQuery(document).ready(function($){
+      var $btn = $('#ege-cards-admin-make-sticky-btn').first();
+      $btn.click(function(e){
+        $btn.attr('disabled', 'disabled');
+        e.preventDefault();
+        var data = {
+          action: 'ege_cards_make_sticky',
+          id: '<?= $post->ID; ?>'
+        }
+        $.post(ajaxurl, data, function(response, status){
+          $btn.removeAttr('disabled');
+          if (response.error) {
+            alert(response.error);
+          }
+        });
+      });
+    });
+  </script>
   <?php
 }
 
@@ -434,3 +470,17 @@ function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
   return ob_get_clean();   
 }
 add_shortcode('ege_cards_sticky_card', 'ege_cards_add_sticky_widget');
+
+function ege_cards_make_sticky () {
+  $data = array();
+  if (!isset($_POST['id'])){
+    $data['error'] = 'No Card ID!';
+  } elseif (!preg_match('/^[0-9]+$/', $_POST['id'])) {
+    $data['error'] = 'Invalid Card ID';
+  } else {
+    update_option('ege_cards_sticky_id', $_POST['id']);
+    $data['status'] = 'success';
+  }
+  wp_send_json($data);
+}
+add_action('wp_ajax_ege_cards_make_sticky', 'ege_cards_make_sticky');

@@ -1,6 +1,16 @@
+<?php 
+$sticky_card_meta = get_post_meta($sticky_card->ID);
+$sticky_card_title = $sticky_card_meta['long_title'];
+$sticky_card_title = is_array($sticky_card_title) ? $sticky_card_title[0] : $sticky_card_title;
+$sticky_card_title = $sticky_card_title ? $sticky_card_title : $sticky_card->post_title;
+
+$sticky_card_deep_link = $sticky_card_meta['deep_link'];
+$sticky_card_deep_link = is_array($sticky_card_deep_link) ? $sticky_card_deep_link[0] : $sticky_card_deep_link;
+$sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
+?>
 <div class="ege-sticky-card">
   
-  <div class="ege-sticky-title"><?= $sticky_card->post_title; ?></div>
+  <div class="ege-sticky-title"><?= $sticky_card_title; ?></div>
   
   <div class="ege-sticky-table">
     <div class="ege-sticky-excerpt"><?= $sticky_card->post_excerpt; ?></div>
@@ -10,7 +20,7 @@
   </div>
   
   <div class="mb-2">
-    <a href="#" class="ege-sticky-apply-btn">Apply now</a>
+    <a href="<?= $sticky_card_deep_link; ?>" class="ege-sticky-apply-btn">Apply now</a>
   </div>
 
   <hr />

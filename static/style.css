@@ -115,8 +115,11 @@
   font-weight: 800;
   display: block;
 }
-.ege-cards-search-form .ege-cards-search-select {
+.ege-cards-search-form input,
+.ege-cards-search-form select {
+  border-radius: 0;
   font-size: 12px;
+  min-width: 200px
 }
 .ege-cards-search-form .ege-cards-search-input {
   font-size: 12px;
@@ -154,7 +157,7 @@
   }
   .ege-cards-search-form .ege-cards-search-label {}
   .ege-cards-search-form .ege-cards-search-input {
-    min-width: 300px;
+    min-width: 400px;
     margin-top: 0;
     width: auto;
   }
