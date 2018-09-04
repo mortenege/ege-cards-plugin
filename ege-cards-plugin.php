@@ -134,6 +134,8 @@ function ege_cards_post_meta_box_html ($post) {
           $btn.removeAttr('disabled');
           if (response.error) {
             alert(response.error);
+          } else {
+            $btn.parent().attr('data-is-sticky', '1');
           }
         });
       });
