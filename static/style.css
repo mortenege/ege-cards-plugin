@@ -84,8 +84,8 @@
   transition: border-radius 0.4s;
 }
 .ege-card .ege-card-apply-btn:hover {
-  text-decoration: underline;
   border-radius: 5px;
+  background-color: #4d7ce4;
 }
 .ege-card .ege-card-terms-link,
 .ege-card .ege-card-terms-link:active,
@@ -114,6 +114,8 @@
 .ege-cards-search-form .ege-cards-search-label {
   font-weight: 800;
   display: block;
+  font-size: 16px;
+  font-family: Open Sans, Arial, sans serif;
 }
 .ege-cards-search-form input,
 .ege-cards-search-form select {
@@ -128,6 +130,7 @@
   width: 100%;
   margin-top: 10px;
 }
+
 @media only screen and (min-width: 768px) {
   .ege-cards-search-form {
     display: flex;
@@ -149,6 +152,7 @@
     width: 100%;
   }
 }
+
 @media only screen and (min-width: 992px) {
   .ege-cards-search-form {
     display: flex;
@@ -157,7 +161,7 @@
   }
   .ege-cards-search-form .ege-cards-search-label {}
   .ege-cards-search-form .ege-cards-search-input {
-    min-width: 400px;
+    min-width: 350px;
     margin-top: 0;
     width: auto;
   }

@@ -93,7 +93,11 @@ $sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
   }
 }
 
-.ege-sticky-card .ege-sticky-apply-btn {
+.ege-sticky-card .ege-sticky-apply-btn,
+.ege-sticky-card .ege-sticky-apply-btn:hover
+.ege-sticky-card .ege-sticky-apply-btn:active,
+.ege-sticky-card .ege-sticky-apply-btn:focus,
+.ege-sticky-card .ege-sticky-apply-btn:visited {
   background-color: rgb(42, 42, 68);
   font-family: "Montserrat", Arial, Helvetics, sans serif;
   font-weight: bold;
@@ -109,6 +113,10 @@ $sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
   box-shadow: none;
   border-radius: 0;
   transition: border-radius 0.4s;
+}
+
+.ege-sticky-card .ege-sticky-apply-btn:hover {
+  background-color: #4d7ce4;
 }
 
 .ege-sticky-card .phase {
