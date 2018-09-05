@@ -39,9 +39,13 @@ jQuery(document).ready(function($){
   
   $readMoreBtn.click(function(e){
     e.preventDefault();
-    var $phase = $('#ege-sticky-card .phase').first();
-    console.log('---->', $phase);
+    var $phase = $('#ege-sticky-card .phase');
     $phase.toggleClass('expand');
+    if ($phase.hasClass('expand')) {
+      $readMoreBtn.text('Read Less');
+    } else {
+      $readMoreBtn.text('Read More');
+    }
   });
 });
 </script>
