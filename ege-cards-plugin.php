@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20180904
+Version:      20180912
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set up Config and version number
 $ege_cards_config = [
-  'version' => '20180904'
+  'version' => '20180911'
 ];
 
 // Setup meta fields to be stored for each card
@@ -23,7 +23,9 @@ $ege_card_meta_names = [
   'deep_link' => 'Deep Link',
   'term_link' => 'Link to Terms',
   'annual_fee' => 'Annual Fee text',
-  'bonus_value' => 'Bonus value text'
+  'bonus_value' => 'Bonus value text',
+  'official_name_1' => 'Official Name #1',
+  'official_name_2' => 'Official Name #2'
 ];
 
 /**
@@ -281,10 +283,6 @@ add_action('save_post', 'ege_cards_save_card');
  */
 function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
   global $ege_cards_config;
-  // bootstrap  
-  // wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
-  // wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
-
   // style
   wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', null, $ege_cards_config['version']);
 
@@ -450,12 +448,12 @@ function ege_cards_filter_hidden_boxes ($hidden, $screen, $use_defaults) {
 }
 add_filter( 'hidden_meta_boxes', 'ege_cards_filter_hidden_boxes', 10, 3 );
 
+/**
+ * Display 'sticky' travelcard
+ */
+add_shortcode('ege_cards_sticky_card', 'ege_cards_add_sticky_widget');
 function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
   global $ege_cards_config;
-  // bootstrap  
-  // wp_enqueue_style('bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css');
-  // wp_enqueue_script( 'bootstrap','https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js', array( 'jquery' ),'',true );
-  // style
   wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', null, $ege_cards_config['version']);
 
   // normalize attribute keys, lowercase
@@ -482,8 +480,11 @@ function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
   require_once(dirname(__FILE__) . $filename);
   return ob_get_clean();   
 }
-add_shortcode('ege_cards_sticky_card', 'ege_cards_add_sticky_widget');
 
+/**
+ * AJAX call to make this travelcard 'sticky'
+ */
+add_action('wp_ajax_ege_cards_make_sticky', 'ege_cards_make_sticky');
 function ege_cards_make_sticky () {
   $data = array();
   if (!isset($_POST['id'])){
@@ -496,4 +497,52 @@ function ege_cards_make_sticky () {
   }
   wp_send_json($data);
 }
-add_action('wp_ajax_ege_cards_make_sticky', 'ege_cards_make_sticky');
+
+/**
+ * https://codex.wordpress.org/Javascript_Reference/ThickBox
+ */
+add_action('media_buttons', 'ege_cards_add_custom_link_button', 15);
+function ege_cards_add_custom_link_button() {
+  global $wpdb; // {$wpdb->prefix}
+  $results = $wpdb->get_results( "SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2 FROM {$wpdb->prefix}posts as post LEFT JOIN {$wpdb->prefix}postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN {$wpdb->prefix}postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' WHERE post.post_type = 'travelcard' AND post.post_status = 'publish'", OBJECT );
+
+  // SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2 FROM wp_posts as post LEFT JOIN wp_postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN wp_postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' where post.post_type = 'travelcard' AND post.post_status = 'publish'
+  include __DIR__ . '/templates/card-link-inserter.php';
+}
+
+/**
+ * Add shortcode for in-post deep link
+ */
+add_shortcode('ege_cards_link', 'ege_cards_link_shortcode');
+function ege_cards_link_shortcode($atts = [], $content = '', $tag = ''){
+  // normalize attribute keys, lowercase
+  $atts = array_change_key_case((array)$atts, CASE_LOWER);
+  // override default attributes with user attributes
+  $parsed_atts = shortcode_atts([], $atts, $tag);
+
+  // get the ID from shortcode atts
+  $id = $atts['id'];
+  if (!$id) return '<a href="#">[incorrect ID]</a>';
+
+  // find card in database
+  $card = get_post($atts['id']);
+  // make sure POST is a 'travelcard'
+  if (!$card || $card->post_type !== 'travelcard') return '<a href="#">[not found]</a>';
+  // retrieve meta for card
+  $meta = get_post_meta($card->ID);
+  // set caption
+  $caption = $atts['caption'];
+  $caption = $caption ? $meta[$caption] : null;
+  $caption = $caption ? $caption[0] : $card->post_title;
+  // set url
+  $url = $meta['deep_link'];
+  $url = $url ? $url[0] : '#';
+  // build HTML
+  return '<a href="' . $url . '">' . $caption . '</a>';
+}
+
+add_action( 'admin_enqueue_scripts', 'ege_cards_add_admin_scripts', 10, 1 );
+function ege_cards_add_admin_scripts(){
+  global $ege_cards_config;
+  wp_enqueue_script('ege_cards_admin', plugin_dir_url( __FILE__ ) . 'static/admin.js', null, $ege_cards_config['version']);
+}
