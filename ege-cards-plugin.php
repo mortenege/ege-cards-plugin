@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set up Config and version number
 $ege_cards_config = [
-  'version' => '20180911'
+  'version' => '20180912'
 ];
 
 // Setup meta fields to be stored for each card
@@ -364,15 +364,6 @@ function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
   $parsed_atts = shortcode_atts([], $atts, $tag);
 
   $filename = '/templates/cards.php';
-  ?>
-  <pre>
-    <?php
-    var_dump(current_user_can( 'edit_travelcards' ));
-  var_dump($GLOBALS['wp_post_types']['travelcard']->cap);
-  ?>
-</pre>
-  <?php
-  die();
 
   ob_start();
   require_once(dirname(__FILE__) . $filename);

@@ -164,6 +164,9 @@
     grid-template-columns: 50% 50%;
     grid-column-gap: 10px;
     grid-row-gap: 20px;
+    -ms-grid-template-columns: 50% 50%;
+    -ms-grid-column-gap: 10px;
+    -ms-grid-row-gap: 20px;
   }
 }
 
@@ -176,6 +179,9 @@
     grid-template-columns: 33.33% 33.33% 33.33%;
     grid-column-gap: 10px;
     grid-row-gap: 20px;
+    -ms-grid-template-columns: 33.33% 33.33% 33.33%;
+    -ms-grid-column-gap: 10px;
+    -ms-grid-row-gap: 20px;
   }
   .ege-cards-search-form {
     display: flex;
@@ -205,6 +211,9 @@
     grid-template-columns: 25% 25% 25% 25%;
     grid-column-gap: 10px;
     grid-row-gap: 20px;
+    -ms-grid-template-columns: 25% 25% 25% 25%;
+    -ms-grid-column-gap: 10px;
+    -ms-grid-row-gap: 20px;
   }
 
   .ege-cards-search-form {
