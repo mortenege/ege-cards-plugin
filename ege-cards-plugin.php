@@ -28,6 +28,76 @@ $ege_card_meta_names = [
   'official_name_2' => 'Official Name #2'
 ];
 
+class EgeCardsPlugin {
+  public static function activatePlugin(){
+    self::addCapabilities();
+  }
+
+  public static function deactivatePlugin(){
+    self::removeCapabilities();
+  }
+
+  private static function addCapabilities() {
+    $admin_role = get_role('administrator');
+    $admin_role->add_cap('read_travelcard');
+    $admin_role->add_cap('edit_travelcard');
+    $admin_role->add_cap('delete_travelcard');
+    $admin_role->add_cap('edit_travelcards');
+    $admin_role->add_cap('edit_others_travelcards');
+    $admin_role->add_cap('publish_travelcards');
+    $admin_role->add_cap('read_private_travelcards');
+
+    $editor_role = get_role('editor');
+    $editor_role->add_cap('read_travelcard');
+    $editor_role->add_cap('edit_travelcard');
+    $editor_role->add_cap('delete_travelcard');
+    $editor_role->add_cap('edit_travelcards');
+    $editor_role->add_cap('edit_others_travelcards');
+    $editor_role->add_cap('publish_travelcards');
+    $editor_role->add_cap('read_private_travelcards');
+
+    $author_role = get_role('author');
+    $author_role->add_cap('read_travelcard');
+    $author_role->add_cap('edit_travelcard', false);
+    $author_role->add_cap('delete_travelcard', false);
+    $author_role->add_cap('edit_travelcards', false);
+    $author_role->add_cap('edit_others_travelcards', false);
+    $author_role->add_cap('publish_travelcards', false);
+    $author_role->add_cap('read_private_travelcards', false);
+  }
+
+  private static function removeCapabilities() {
+    $admin_role = get_role('administrator');
+    $admin_role->add_cap('read_travelcard');
+    $admin_role->add_cap('edit_travelcard', false);
+    $admin_role->add_cap('delete_travelcard', false);
+    $admin_role->add_cap('edit_travelcards', false);
+    $admin_role->add_cap('edit_others_travelcards', false);
+    $admin_role->add_cap('publish_travelcards', false);
+    $admin_role->add_cap('read_private_travelcards', false);
+
+    $editor_role = get_role('editor');
+    $editor_role->add_cap('read_travelcard');
+    $editor_role->add_cap('edit_travelcard', false);
+    $editor_role->add_cap('delete_travelcard', false);
+    $editor_role->add_cap('edit_travelcards', false);
+    $editor_role->add_cap('edit_others_travelcards', false);
+    $editor_role->add_cap('publish_travelcards', false);
+    $editor_role->add_cap('read_private_travelcards', false);
+
+    $author_role = get_role('author');
+    $author_role->add_cap('read_travelcard');
+    $author_role->add_cap('edit_travelcard', false);
+    $author_role->add_cap('delete_travelcard', false);
+    $author_role->add_cap('edit_travelcards', false);
+    $author_role->add_cap('edit_others_travelcards', false);
+    $author_role->add_cap('publish_travelcards', false);
+    $author_role->add_cap('read_private_travelcards', false);
+  }
+}
+register_activation_hook( __FILE__, array('EgeCardsPlugin', 'activatePlugin') );
+register_deactivation_hook( __FILE__, array('EgeCardsPlugin', 'deactivatePlugin') );
+
 /**
  * Create Custom Post type: travelcard
  */
@@ -66,7 +136,9 @@ function ege_cards_create_post_type() {
       'public' => true,
       'has_archive' => false,
       'menu_icon' => 'dashicons-id',
-      'supports' => $supports
+      'supports' => $supports,
+      'capability_type' => array('travelcard', 'travelcards'),
+      'map_meta_cap' => false,
     )
   );
 }
@@ -292,6 +364,15 @@ function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
   $parsed_atts = shortcode_atts([], $atts, $tag);
 
   $filename = '/templates/cards.php';
+  ?>
+  <pre>
+    <?php
+    var_dump(current_user_can( 'edit_travelcards' ));
+  var_dump($GLOBALS['wp_post_types']['travelcard']->cap);
+  ?>
+</pre>
+  <?php
+  die();
 
   ob_start();
   require_once(dirname(__FILE__) . $filename);
@@ -325,6 +406,12 @@ function ege_cards_create_taxonomies() {
     'show_admin_column' => true,
     'query_var'         => true,
     'rewrite'           => array( 'slug' => 'card_category' ),
+    'capabilities'      => array(
+      'manage_terms' => 'edit_travelcards',
+      'edit_terms'   => 'edit_travelcards',
+      'delete_terms' => 'edit_travelcards',
+      'assign_terms' => 'edit_travelcards'
+    )
   );
 
   register_taxonomy( 'card_category', array( 'travelcard' ), $args );
@@ -357,6 +444,12 @@ function ege_cards_create_taxonomies() {
     'update_count_callback' => '_update_post_term_count',
     'query_var'             => true,
     'rewrite'               => array( 'slug' => 'card_tag' ),
+    'capabilities'      => array(
+      'manage_terms' => 'edit_travelcards',
+      'edit_terms'   => 'edit_travelcards',
+      'delete_terms' => 'edit_travelcards',
+      'assign_terms' => 'edit_travelcards'
+    )
   );
 
   register_taxonomy( 'card_tag', 'travelcard', $args );
