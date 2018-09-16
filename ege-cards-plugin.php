@@ -622,6 +622,7 @@ function ege_cards_link_shortcode($atts = [], $content = '', $tag = ''){
   $url = $meta['deep_link'];
   $url = $url ? $url[0] : '#';
   // build HTML
+  $url = ege_cards_redirect_url($url, $id);
   return '<a href="' . $url . '">' . $caption . '</a>';
 }
 
@@ -629,4 +630,82 @@ add_action( 'admin_enqueue_scripts', 'ege_cards_add_admin_scripts', 10, 1 );
 function ege_cards_add_admin_scripts(){
   global $ege_cards_config;
   wp_enqueue_script('ege_cards_admin', plugin_dir_url( __FILE__ ) . 'static/admin.js', null, $ege_cards_config['version']);
+}
+
+add_filter('manage_travelcard_posts_columns' , 'ege_cards_add_columns');
+function ege_cards_add_columns($columns) {
+  // unset($columns['author']);
+  return array_merge($columns, 
+    array(
+      'page_displays' => 'Page Displays',
+      'click_count' => 'Click Count'
+    )
+  );
+}
+
+add_action( 'manage_posts_custom_column' , 'ege_cards_custom_columns', 10, 2 );
+function ege_cards_custom_columns( $column, $post_id ) {
+  global $wpdb; // {$wpdb->prefix}
+  switch ( $column ) {
+    case 'click_count':
+      $val = get_post_meta($post_id, 'link_click_cnt', true);
+      $val = preg_match('/^[0-9]+$/', $val) ? $val : 0;
+      echo $val;
+      break;
+    case 'page_displays':
+      $likeStr = '%[ege\_cards\_link_id="' . $post_id . '"%';
+      $count = $wpdb->get_var( "SELECT COUNT(*) as count FROM wp_posts WHERE post_type IN ('post', 'page') AND post_status = 'publish' AND post_content LIKE '" . $likeStr . "';" );
+      echo $count;
+      break;
+  }
+}
+
+function ege_cards_redirect_url($url, $id){
+  if (get_option('ege_cards_use_redirect', false)) {
+    return get_site_url() . '/travelcard_redirect?url=' . urlencode($url) . '&id=' . $id;
+  }
+  return $url;
+}
+
+/**
+ * Remember to 'flush' rewrite rules upon changes
+ * >> settings->permalinks->save (without making changes)
+ */
+add_action('init', 'ege_cards_custom_rewrite_rule');
+function ege_cards_custom_rewrite_rule() {
+  add_rewrite_rule('^travelcard_redirect', 'wp-content/plugins/ege-cards-plugin/redirect.php', 'top');
+}
+
+function ege_cards_sanitize_boolean( $input ){
+  return isset( $input ) ? true : false;
+}
+function ege_cards_use_redirect_html_callback(){
+  $value = get_option('ege_cards_use_redirect', false);
+  ?>
+  <input type="checkbox" name="ege_cards_use_redirect" value="1" <?php checked($value); ?>" />
+  <?php
+}
+function ege_cards_settings_html_callback(){
+  ?>
+  <p>These are settings for the Travelcards plugin</p>
+  <?php
+}
+add_action('admin_init', 'ege_cards_settings');
+function ege_cards_settings () {
+  register_setting( 'general', 'ege_cards_use_redirect', 'ege_cards_sanitize_boolean' );
+
+  add_settings_section(
+    'ege_cards_settings', // ID
+    'Travelcards Settings', // Section title
+    'ege_cards_settings_html_callback', // Callback for your function
+    'general' // Location (Settings > Permalinks)
+  );
+
+  add_settings_field(
+    'ege_cards_use_redirect',
+    'Enable Travelcard click counting',
+    'ege_cards_use_redirect_html_callback',
+    'general',
+    'ege_cards_settings'
+  );
 }

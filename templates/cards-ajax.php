@@ -38,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
       <div style="padding-bottom: 100px;"></div>
       
       <div class="ege-card-footer">
-        <a href="<?= $deep_link; ?>" target="_blank" class="btn ege-card-apply-btn">APPLY NOW</a>
+        <a href="<?= ege_cards_redirect_url($deep_link, $post->ID); ?>" target="_blank" class="btn ege-card-apply-btn">APPLY NOW</a>
         <a href="<?= $term_link; ?>" target="_blank" class="ege-card-terms-link">Terms and Conditions</a>
       </div>
     
