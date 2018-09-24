@@ -6,6 +6,7 @@ $sticky_card_title = $sticky_card_title ? $sticky_card_title : $sticky_card->pos
 
 $sticky_card_deep_link = $sticky_card_meta['deep_link'];
 $sticky_card_deep_link = is_array($sticky_card_deep_link) ? $sticky_card_deep_link[0] : $sticky_card_deep_link;
+$sticky_card_deep_link = EgeCardsPLugin::createRedirectUrl($sticky_card_deep_link, $sticky_card->ID);
 $sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
 ?>
 <div id="ege-sticky-card">
