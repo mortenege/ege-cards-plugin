@@ -3,32 +3,75 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20180912
+Version:      20180924
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 */
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-// Set up Config and version number
-$ege_cards_config = [
-  'version' => '20180912'
-];
-
-// Setup meta fields to be stored for each card
-// + default POST field
-$ege_card_meta_names = [
-  'callout' => 'Callout text',
-  'long_title' => 'Long Title',
-  'deep_link' => 'Deep Link',
-  'term_link' => 'Link to Terms',
-  'annual_fee' => 'Annual Fee text',
-  'bonus_value' => 'Bonus value text',
-  'official_name_1' => 'Official Name #1',
-  'official_name_2' => 'Official Name #2'
-];
-
 class EgeCardsPlugin {
+  public const VERSION = '20180924';
+
+  public const META = array(
+    'callout' => 'Callout text',
+    'long_title' => 'Long Title',
+    'deep_link' => 'Deep Link',
+    'term_link' => 'Link to Terms',
+    'annual_fee' => 'Annual Fee text',
+    'bonus_value' => 'Bonus value text',
+    'official_name_1' => 'Official Name #1',
+    'official_name_2' => 'Official Name #2'
+  );
+
+  public function __construct(){
+    // De- and Register hooks
+    register_activation_hook( __FILE__, [self::class, 'activatePlugin'] );
+    register_deactivation_hook( __FILE__, [self::class, 'deactivatePlugin'] );
+
+    // Init hook
+    add_action( 'init', [self::class, 'createPostType'] );
+    add_action( 'init', [self::class, 'self::createTaxonomies'], 0 );
+    add_action( 'init', [self::class, 'addCustomRewriteRule'] );
+    add_action( 'admin_init', [self::class, 'registerSettings'] );
+
+    // Shortcodes
+    add_shortcode( 'ege_cards', [self::class, 'basicShortcode'] );
+    add_shortcode( 'ege_cards_sticky_card', [self::class, 'stickyWidgetShortcode'] );
+    add_shortcode( 'ege_cards_link', [self::class, 'linkShortcode'] );
+
+    // AJAX
+    add_action( 'wp_ajax_nopriv_ege_cards_search_cards', [self::class, 'ajaxSearchCards'] );
+    add_action( 'wp_ajax_ege_cards_search_cards', [self::class, 'ajaxSearchCards'] );
+    add_action( 'wp_ajax_ege_cards_make_sticky', [self::class, 'ajaxMakeSticky'] );
+
+    // Custom POST title filter
+    add_filter( 'enter_title_here', [self::class, 'postTitlePlaceholder'] );
+
+    // Custom POST help tab
+    add_action( 'admin_head', [self::class, 'postHelpTab'] );
+
+    // Custom POST updated messages
+    add_filter( 'post_updated_messages', [self::class, 'postUpdatedMessages'] );
+    add_filter( 'bulk_post_updated_messages', [self::class, 'postBulkMessages'], 10, 2 );
+
+    // Custom POST save
+    add_action('save_post', 'saveCard');
+
+    // Hack to remove uncessecary meta boxes
+    add_filter( 'hidden_meta_boxes', [self::class, 'filterHiddenBoxes'], 10, 3 );
+
+    // Add button to POST edit text area
+    add_action('media_buttons', [self::class, 'addCustomLinkButton'], 15);
+
+    // Enqueue admin sctipts
+    add_action( 'admin_enqueue_scripts', [self::class, 'addAdminScripts'], 10, 1 );
+
+    // Add extra column tp travelcards table view
+    add_filter( 'manage_travelcard_posts_columns' , [self::class, 'addColumns'] );
+    add_action( 'manage_posts_custom_column' , [self::class, 'customColumns'], 10, 2 );
+  }
+
   public static function activatePlugin(){
     self::addCapabilities();
   }
@@ -94,618 +137,613 @@ class EgeCardsPlugin {
     $author_role->add_cap('publish_travelcards', false);
     $author_role->add_cap('read_private_travelcards', false);
   }
-}
-register_activation_hook( __FILE__, array('EgeCardsPlugin', 'activatePlugin') );
-register_deactivation_hook( __FILE__, array('EgeCardsPlugin', 'deactivatePlugin') );
 
-/**
- * Create Custom Post type: travelcard
- */
-function ege_cards_create_post_type() {
-  $plural = 'Travel Cards';
-  $singular = 'Travel Card';
-  $p_lower = strtolower($plural);
-  $s_lower = strtolower($singular);
+  /**
+   * Create Custom Post type: travelcard
+   */
+  public static function createPostType() {
+    $plural = 'Travel Cards';
+    $singular = 'Travel Card';
+    $p_lower = strtolower($plural);
+    $s_lower = strtolower($singular);
 
-  $labels = [
-    'name' => $plural,
-    'singular_name' => $singular,
-    'add_new_item' => "New $singular",
-    'edit_item' => "Edit $singular",
-    'view_item' => "View $singular",
-    'view_items' => "View $plural",
-    'search_items' => "Search $plural",
-    'not_found' => "No $p_lower found",
-    'not_found_in_trash' => "No $p_lower found in trash",
-    'parent_item_colon' => "Parent $singular",
-    'all_items' => "All $plural",
-    'archives' => "$singular Archives",
-    'attributes' => "$singular Attributes",
-    'insert_into_item' => "Insert into $s_lower",
-    'uploaded_to_this_item' => "Uploaded to this $s_lower",
-  ];
-
-  $supports = ['title', 'editor', 'thumbnail', 'excerpt'];
-
-  register_post_type( 'travelcard',
-    array(
-      'rewrite' => ['slug' => 'travelcard'],
-      'taxonomies' => array('card_category', 'card_tag'),
-      'register_meta_box_cb' => 'ege_cards_meta_box',
-      'labels' => $labels,
-      'public' => true,
-      'has_archive' => false,
-      'menu_icon' => 'dashicons-id',
-      'supports' => $supports,
-      'capability_type' => array('travelcard', 'travelcards'),
-      'map_meta_cap' => false,
-    )
-  );
-}
-add_action( 'init', 'ege_cards_create_post_type' );
-
-/**
- * Custom meta box HTML
- * @param  WP_Post $post
- */
-function ege_cards_post_meta_box_html ($post) {
-  global $ege_card_meta_names;
-  $field_names = $ege_card_meta_names;
-  $meta = get_post_meta($post->ID);
-
-  $field_values = [];
-  foreach ($field_names as $name => $text) {
-    if (isset($meta[$name])) {
-      $field_values[$name] = $meta[$name][0];
-    }
-  }
-  
-  // wp_nonce_field('ege_card_nonce', 'ege_card_nonce');
-  $sticky_id = get_option('ege_cards_sticky_id', 0);
-  $is_sticky = $post->ID === $sticky_id ? '1' : '0';
-  ?>
-  <table class="form-table">
-    <?php foreach ($field_names as $name => $text): ?>
-    <tr>
-      <th> <label for="<?= $name; ?>"><?= $text; ?></label></th>
-      <td>
-        <input id="<?= $name; ?>"
-         name="<?= $name; ?>"
-         type="text"
-         value="<?= esc_attr($field_values[$name]); ?>"
-         style="width: 100%;"
-         />
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
-  
-  <hr style="margin: 20px 0;"/>
-
-  <div data-is-sticky="<?= $is_sticky; ?>">
-    <div class="show-if-sticky"><strong>This card has been selected as <em>Sticky</em></strong></div>
-    <button class="hide-if-sticky" id="ege-cards-admin-make-sticky-btn">Make me sticky</button>
-  </div>
-  <style>
-    div[data-is-sticky="0"] .show-if-sticky {
-      display: none;
-    }
-    div[data-is-sticky="1"] .hide-if-sticky {
-      display: none;
-    }
-  </style>
-  <script>
-    jQuery(document).ready(function($){
-      var $btn = $('#ege-cards-admin-make-sticky-btn').first();
-      $btn.click(function(e){
-        $btn.attr('disabled', 'disabled');
-        e.preventDefault();
-        var data = {
-          action: 'ege_cards_make_sticky',
-          id: '<?= $post->ID; ?>'
-        }
-        $.post(ajaxurl, data, function(response, status){
-          $btn.removeAttr('disabled');
-          if (response.error) {
-            alert(response.error);
-          } else {
-            $btn.parent().attr('data-is-sticky', '1');
-          }
-        });
-      });
-    });
-  </script>
-  <?php
-}
-
-/**
- * Add Meta Box
- * @param  WP_Post $post
- */
-function ege_cards_meta_box (WP_Post $post) {
-  add_meta_box(
-    'ege_card_meta',
-    'Card Details',
-    'ege_cards_post_meta_box_html'
-  );
-}
-
-/**
- * Filter POST title placeholder
- * @param  String $title
- * @return String
- */
-function ege_cards_post_title_placeholder ( $title ) {
-  $screen = get_current_screen();
-
-  if  ( 'travelcard' == $screen->post_type ) {
-      $title = 'Enter Travel Card name here';
-  }
-
-  return $title;
-}
-add_filter( 'enter_title_here', 'ege_cards_post_title_placeholder');
-
-/**
- * Create POST "help" tab
- */
-function ege_cards_post_help_tab () {
-    $screen = get_current_screen();
-
-    if ( 'travelcard' != $screen->post_type )
-        return;
-
-    $args = [
-        'id'      => 'travelcard',
-        'title'   => 'Travel Cards Help',
-        'content' => file_get_contents(__DIR__ . '/templates/help.php'),
+    $labels = [
+      'name' => $plural,
+      'singular_name' => $singular,
+      'add_new_item' => "New $singular",
+      'edit_item' => "Edit $singular",
+      'view_item' => "View $singular",
+      'view_items' => "View $plural",
+      'search_items' => "Search $plural",
+      'not_found' => "No $p_lower found",
+      'not_found_in_trash' => "No $p_lower found in trash",
+      'parent_item_colon' => "Parent $singular",
+      'all_items' => "All $plural",
+      'archives' => "$singular Archives",
+      'attributes' => "$singular Attributes",
+      'insert_into_item' => "Insert into $s_lower",
+      'uploaded_to_this_item' => "Uploaded to this $s_lower",
     ];
 
-    $screen->add_help_tab( $args );
-}
-add_action('admin_head', 'ege_cards_post_help_tab');
+    $supports = ['title', 'editor', 'thumbnail', 'excerpt'];
 
-/**
- * Set all messages related to updating travelcard
- * @param  Array $messages [description]
- * @return Array
- */
-function ege_cards_post_updated_messages ($messages) {
-  global $post, $post_ID;
-  $link = esc_url( get_permalink($post_ID) );
-
-  $messages['travelcard'] = array(
-      0 => '',
-      1 => sprintf( __('Card updated. <a href="%s">View card</a>'), $link ),
-      2 => __('Custom field updated.'),
-      3 => __('Custom field deleted.'),
-      4 => __('Card updated.'),
-      5 => isset($_GET['revision']) ? sprintf( __('Card restored to revision from %s'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
-      6 => sprintf( __('Card published. <a href="%s">View card</a>'), $link ),
-      7 => __('Card saved.'),
-      8 => sprintf( __('Card submitted. <a target="_blank" href="%s">Preview card</a>'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
-      9 => sprintf( __('Card scheduled for: <strong>%1$s</strong>. <a target="_blank" href="%2$s">Preview card</a>'), date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), $link ),
-      10 => sprintf( __('Card draft updated. <a target="_blank" href="%s">Preview card</a>'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
-  );
-  return $messages;
-}
-add_filter( 'post_updated_messages', 'ege_cards_post_updated_messages');
-
-/**
- * Set all bulk update messages for travelcard
- * @param  Array $bulk_messages
- * @param  [type] $bulk_counts   [description]
- * @return Array
- */
-function ege_cards_post_bulk_messages ( $bulk_messages, $bulk_counts ) {
-  $bulk_messages['travelcard'] = array(
-      'updated'   => _n( "%s card updated.", "%s cards updated.", $bulk_counts["updated"] ),
-      'locked'    => _n( "%s card not updated, somebody is editing it.", "%s cards not updated, somebody is editing them.", $bulk_counts["locked"] ),
-      'deleted'   => _n( "%s card permanently deleted.", "%s cards permanently deleted.", $bulk_counts["deleted"] ),
-      'trashed'   => _n( "%s card moved to the Trash.", "%s cards moved to the Trash.", $bulk_counts["trashed"] ),
-      'untrashed' => _n( "%s card restored from the Trash.", "%s cards restored from the Trash.", $bulk_counts["untrashed"] ),
-  );
-
-  return $bulk_messages;
-}
-add_filter( 'bulk_post_updated_messages', 'ege_cards_post_bulk_messages', 10, 2 );
-
-/**
- * 'Save POST' hook
- * @param  Integer $post_id
- */
-function ege_cards_save_card ($post_id){
-  global $ege_card_meta_names;
-  $post = get_post($post_id);
-  $is_revision = wp_is_post_revision($post_id);
-
-  // Do not save meta for a revision or on autosave
-  if ( $post->post_type != 'travelcard' || $is_revision )
-      return;
-
-  // Secure with nonce field check
-  //if( ! check_admin_referer('ege_card_nonce', 'ege_card_nonce') )
-  //    return;
-
-  $field_names = $ege_card_meta_names;
-  foreach ($field_names as $field_name => $text) {
-    // Do not save meta if fields are not present,
-    // like during a restore.
-    if( !isset($_POST[$field_name]) )
-        continue;
-
-    // Clean up data
-    $field_value = trim($_POST[$field_name]);
-    // Do the saving and deleting
-    if( ! (!isset( $field_value ) || $field_value === "") ) {
-        update_post_meta($post_id, $field_name, $field_value);
-    } else {
-        delete_post_meta($post_id, $field_name);
-    }
-  }
-}
-add_action('save_post', 'ege_cards_save_card');
-
-/**
- * The widget shortcode
- * @param  array  $atts    [description]
- * @param  string $content [description]
- * @param  string $tag     [description]
- * @return [type]          [description]
- */
-function ege_cards_basic_shortcode($atts = [], $content = '', $tag = ''){
-  global $ege_cards_config;
-  // style
-  wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', null, $ege_cards_config['version']);
-
-  // normalize attribute keys, lowercase
-  $atts = array_change_key_case((array)$atts, CASE_LOWER);
-  // override default attributes with user attributes
-  $parsed_atts = shortcode_atts([], $atts, $tag);
-
-  $filename = '/templates/cards.php';
-
-  ob_start();
-  require_once(dirname(__FILE__) . $filename);
-  return ob_get_clean();
-}
-add_shortcode( 'ege_cards', 'ege_cards_basic_shortcode');
-
-/**
- * Register custom taxonomies
- */
-function ege_cards_create_taxonomies() {
-  // Add new taxonomy, make it hierarchical (like categories)
-  $labels = array(
-    'name'              => _x( 'Card Categories', 'taxonomy general name', 'textdomain' ),
-    'singular_name'     => _x( 'Card Category', 'taxonomy singular name', 'textdomain' ),
-    'search_items'      => __( 'Search Card Categories', 'textdomain' ),
-    'all_items'         => __( 'All Card Categories', 'textdomain' ),
-    'parent_item'       => __( 'Parent Card Category', 'textdomain' ),
-    'parent_item_colon' => __( 'Parent Card Category:', 'textdomain' ),
-    'edit_item'         => __( 'Edit Card Category', 'textdomain' ),
-    'update_item'       => __( 'Update Card Category', 'textdomain' ),
-    'add_new_item'      => __( 'Add New Card Category', 'textdomain' ),
-    'new_item_name'     => __( 'New Card Category Name', 'textdomain' ),
-    'menu_name'         => __( 'Card Category', 'textdomain' ),
-  );
-
-  $args = array(
-    'hierarchical'      => true,
-    'labels'            => $labels,
-    'show_ui'           => true,
-    'show_admin_column' => true,
-    'query_var'         => true,
-    'rewrite'           => array( 'slug' => 'card_category' ),
-    'capabilities'      => array(
-      'manage_terms' => 'edit_travelcards',
-      'edit_terms'   => 'edit_travelcards',
-      'delete_terms' => 'edit_travelcards',
-      'assign_terms' => 'edit_travelcards'
-    )
-  );
-
-  register_taxonomy( 'card_category', array( 'travelcard' ), $args );
-
-  // Add 'card tags' taxonomy
-  $labels = array(
-    'name'                       => _x( 'Card Tags', 'taxonomy general name', 'textdomain' ),
-    'singular_name'              => _x( 'Card Tag', 'taxonomy singular name', 'textdomain' ),
-    'search_items'               => __( 'Search Card Tags', 'textdomain' ),
-    'popular_items'              => __( 'Popular Card Tags', 'textdomain' ),
-    'all_items'                  => __( 'All Card Tags', 'textdomain' ),
-    'parent_item'                => null,
-    'parent_item_colon'          => null,
-    'edit_item'                  => __( 'Edit Card Tag', 'textdomain' ),
-    'update_item'                => __( 'Update Card Tag', 'textdomain' ),
-    'add_new_item'               => __( 'Add New Card Tag', 'textdomain' ),
-    'new_item_name'              => __( 'New Card Tag Name', 'textdomain' ),
-    'separate_items_with_commas' => __( 'Separate card tags with commas', 'textdomain' ),
-    'add_or_remove_items'        => __( 'Add or remove card tags', 'textdomain' ),
-    'choose_from_most_used'      => __( 'Choose from the most used card tags', 'textdomain' ),
-    'not_found'                  => __( 'No card tags found.', 'textdomain' ),
-    'menu_name'                  => __( 'Card Tags', 'textdomain' ),
-  );
-
-  $args = array(
-    'hierarchical'          => false,
-    'labels'                => $labels,
-    'show_ui'               => true,
-    'show_admin_column'     => true,
-    'update_count_callback' => '_update_post_term_count',
-    'query_var'             => true,
-    'rewrite'               => array( 'slug' => 'card_tag' ),
-    'capabilities'      => array(
-      'manage_terms' => 'edit_travelcards',
-      'edit_terms'   => 'edit_travelcards',
-      'delete_terms' => 'edit_travelcards',
-      'assign_terms' => 'edit_travelcards'
-    )
-  );
-
-  register_taxonomy( 'card_tag', 'travelcard', $args );
-}
-add_action( 'init', 'ege_cards_create_taxonomies', 0 );
-
-/**
- * AJAX call to fetch cards
- * GET parameters: search, category, tag
- */
-function ege_cards_search_cards () {
-  $args = [
-      'post_type' => 'travelcard',
-      'post_status' => 'publish',
-      'numberposts' => -1
-  ];
-
-  $category = isset($_GET['category']) ? $_GET['category'] : null;
-  $tag = isset($_GET['tag']) ? $_GET['tag'] : null;
-  if ($tag && $category) {
-    $args['tax_query'] = array(
-      'relation' => 'AND',
+    register_post_type( 'travelcard',
       array(
-          'taxonomy' => 'card_category',
-          'field' => 'slug',
-          'terms' => $category,
-      ),
-      array(
-          'taxonomy' => 'card_tag',
-          'field' => 'slug',
-          'terms' => $tag,
-      )
-    );
-  } elseif ($tag) {
-    
-    $args['tax_query'] = array(
-      array(
-          'taxonomy' => 'card_tag',
-          'field' => 'slug',
-          'terms' => $tag,
-      )
-    );
-  } elseif ($category) {
-    $args['tax_query'] = array(
-      array(
-          'taxonomy' => 'card_category',
-          'field' => 'slug',
-          'terms' => $category,
+        'rewrite' => ['slug' => 'travelcard'],
+        'taxonomies' => array('card_category', 'card_tag'),
+        'register_meta_box_cb' => [self::class, 'addMetaBox'],
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => false,
+        'menu_icon' => 'dashicons-id',
+        'supports' => $supports,
+        'capability_type' => array('travelcard', 'travelcards'),
+        'map_meta_cap' => false,
       )
     );
   }
-  $search = isset($_GET['search']) ? $_GET['search'] : null;
-  if ($search) {
-    $args['s'] = $search;
-  }
 
-  $posts  = get_posts($args);
-  
-  include __DIR__ . '/templates/cards-ajax.php';
-  wp_die();
-}
-add_action('wp_ajax_nopriv_ege_cards_search_cards','ege_cards_search_cards');
-add_action('wp_ajax_ege_cards_search_cards','ege_cards_search_cards');
+  /**
+   * Custom meta box HTML
+   * @param  WP_Post $post
+   */
+  public static function postMetaBoxHtml ($post) {
+    $field_names = self::META;
+    $meta = get_post_meta($post->ID);
 
-/**
- * Add hack to hide other meta boxes
- * @param  Array      $hidden
- * @param  WP_Screen  $screen
- * @param  Bool       $use_defaults
- * @return Array
- */
-function ege_cards_filter_hidden_boxes ($hidden, $screen, $use_defaults) {
-  global $wp_meta_boxes;
-  $cpt = 'travelcard'; // Modify this to your needs!
-  $keep = array('postexcerpt', 'postimagediv', 'tagsdiv-card_tag', 'card_categorydiv', 'submitdiv', 'ege_card_meta');
-  if( $cpt === $screen->id && isset( $wp_meta_boxes[$cpt] ) ){
-    $tmp = array();
-    foreach( (array) $wp_meta_boxes[$cpt] as $context_key => $context_item ){
-      foreach( $context_item as $priority_key => $priority_item ){
-        foreach( $priority_item as $metabox_key => $metabox_item )
-          if (!in_array($metabox_key, $keep)) {
-            $tmp[] = $metabox_key;
-          }
+    $field_values = [];
+    foreach ($field_names as $name => $text) {
+      if (isset($meta[$name])) {
+        $field_values[$name] = $meta[$name][0];
       }
     }
-    $hidden = $tmp;  // Override the current user option here.
+    
+    // wp_nonce_field('ege_card_nonce', 'ege_card_nonce');
+    $sticky_id = get_option('ege_cards_sticky_id', 0);
+    $is_sticky = $post->ID === $sticky_id ? '1' : '0';
+    ?>
+    <table class="form-table">
+      <?php foreach ($field_names as $name => $text): ?>
+      <tr>
+        <th> <label for="<?= $name; ?>"><?= $text; ?></label></th>
+        <td>
+          <input id="<?= $name; ?>"
+           name="<?= $name; ?>"
+           type="text"
+           value="<?= esc_attr($field_values[$name]); ?>"
+           style="width: 100%;"
+           />
+        </td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    
+    <hr style="margin: 20px 0;"/>
+
+    <div data-is-sticky="<?= $is_sticky; ?>">
+      <div class="show-if-sticky"><strong>This card has been selected as <em>Sticky</em></strong></div>
+      <button class="hide-if-sticky" id="ege-cards-admin-make-sticky-btn">Make me sticky</button>
+    </div>
+    <style>
+      div[data-is-sticky="0"] .show-if-sticky {
+        display: none;
+      }
+      div[data-is-sticky="1"] .hide-if-sticky {
+        display: none;
+      }
+    </style>
+    <script>
+      jQuery(document).ready(function($){
+        var $btn = $('#ege-cards-admin-make-sticky-btn').first();
+        $btn.click(function(e){
+          $btn.attr('disabled', 'disabled');
+          e.preventDefault();
+          var data = {
+            action: 'ege_cards_make_sticky',
+            id: '<?= $post->ID; ?>'
+          }
+          $.post(ajaxurl, data, function(response, status){
+            $btn.removeAttr('disabled');
+            if (response.error) {
+              alert(response.error);
+            } else {
+              $btn.parent().attr('data-is-sticky', '1');
+            }
+          });
+        });
+      });
+    </script>
+    <?php
   }
-  return $hidden;
-}
-add_filter( 'hidden_meta_boxes', 'ege_cards_filter_hidden_boxes', 10, 3 );
 
-/**
- * Display 'sticky' travelcard
- */
-add_shortcode('ege_cards_sticky_card', 'ege_cards_add_sticky_widget');
-function ege_cards_add_sticky_widget ($atts = [], $content = '', $tag = ''){
-  global $ege_cards_config;
-  wp_enqueue_style('ege_cards', plugin_dir_url( __FILE__ ) . 'static/style.css', null, $ege_cards_config['version']);
+  /**
+   * Add Meta Box
+   * @param  WP_Post $post
+   */
+  public static function addMetaBox (WP_Post $post) {
+    add_meta_box(
+      'ege_card_meta',
+      'Card Details',
+      [self::class, 'postMetaBoxHtml']
+    );
+  }
 
-  // normalize attribute keys, lowercase
-  $atts = array_change_key_case((array)$atts, CASE_LOWER);
-  // override default attributes with user attributes
-  $parsed_atts = shortcode_atts([], $atts, $tag);
+  /**
+   * Change the placeholder of the POST edit title
+   * @param  String $title
+   * @return String
+   */
+  public static function postTitlePlaceholder ( $title ) {
+    $screen = get_current_screen();
 
-  $filename = '/templates/sticky-card.php';
-  
-  $sticky_id = get_option('ege_cards_sticky_id', 0);
-  if (!$sticky_id) {
+    if  ( 'travelcard' == $screen->post_type ) {
+        $title = 'Enter Travel Card name here';
+    }
+
+    return $title;
+  }
+
+  /**
+   * Create Custom POST "help" tab
+   */
+  public static function postHelpTab () {
+      $screen = get_current_screen();
+
+      if ( 'travelcard' != $screen->post_type )
+          return;
+
+      $args = [
+          'id'      => 'travelcard',
+          'title'   => 'Travel Cards Help',
+          'content' => file_get_contents(__DIR__ . '/templates/help.php'),
+      ];
+
+      $screen->add_help_tab( $args );
+  }
+
+  /**
+   * Set all messages related to updating travelcard
+   * @param  Array $messages [description]
+   * @return Array
+   */
+  public static function postUpdatedMessages ($messages) {
+    global $post, $post_ID;
+    $link = esc_url( get_permalink($post_ID) );
+
+    $messages['travelcard'] = array(
+        0 => '',
+        1 => sprintf( __('Card updated. <a href="%s">View card</a>'), $link ),
+        2 => __('Custom field updated.'),
+        3 => __('Custom field deleted.'),
+        4 => __('Card updated.'),
+        5 => isset($_GET['revision']) ? sprintf( __('Card restored to revision from %s'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+        6 => sprintf( __('Card published. <a href="%s">View card</a>'), $link ),
+        7 => __('Card saved.'),
+        8 => sprintf( __('Card submitted. <a target="_blank" href="%s">Preview card</a>'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+        9 => sprintf( __('Card scheduled for: <strong>%1$s</strong>. <a target="_blank" href="%2$s">Preview card</a>'), date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), $link ),
+        10 => sprintf( __('Card draft updated. <a target="_blank" href="%s">Preview card</a>'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+    );
+    return $messages;
+  }
+
+  /**
+   * Set all bulk update messages for travelcard
+   * @param  Array $bulk_messages
+   * @param  [type] $bulk_counts   [description]
+   * @return Array
+   */
+  public static function postBulkMessages ( $bulk_messages, $bulk_counts ) {
+    $bulk_messages['travelcard'] = array(
+        'updated'   => _n( "%s card updated.", "%s cards updated.", $bulk_counts["updated"] ),
+        'locked'    => _n( "%s card not updated, somebody is editing it.", "%s cards not updated, somebody is editing them.", $bulk_counts["locked"] ),
+        'deleted'   => _n( "%s card permanently deleted.", "%s cards permanently deleted.", $bulk_counts["deleted"] ),
+        'trashed'   => _n( "%s card moved to the Trash.", "%s cards moved to the Trash.", $bulk_counts["trashed"] ),
+        'untrashed' => _n( "%s card restored from the Trash.", "%s cards restored from the Trash.", $bulk_counts["untrashed"] ),
+    );
+
+    return $bulk_messages;
+  }
+
+  /**
+   * 'Save POST' hook
+   * @param  Integer $post_id
+   */
+  public static function saveCard ($post_id){
+    $post = get_post($post_id);
+    $is_revision = wp_is_post_revision($post_id);
+
+    // Do not save meta for a revision or on autosave
+    if ( $post->post_type != 'travelcard' || $is_revision )
+        return;
+
+    // Secure with nonce field check
+    //if( ! check_admin_referer('ege_card_nonce', 'ege_card_nonce') )
+    //    return;
+
+    $field_names = self::META;
+    foreach ($field_names as $field_name => $text) {
+      // Do not save meta if fields are not present,
+      // like during a restore.
+      if( !isset($_POST[$field_name]) )
+          continue;
+
+      // Clean up data
+      $field_value = trim($_POST[$field_name]);
+      // Do the saving and deleting
+      if( ! (!isset( $field_value ) || $field_value === "") ) {
+          update_post_meta($post_id, $field_name, $field_value);
+      } else {
+          delete_post_meta($post_id, $field_name);
+      }
+    }
+  }
+
+  /**
+   * The widget shortcode
+   * @param  array  $atts    [description]
+   * @param  string $content [description]
+   * @param  string $tag     [description]
+   * @return [type]          [description]
+   */
+  public static function basicShortcode($atts = [], $content = '', $tag = ''){
+    wp_enqueue_style(
+      'ege_cards',
+      plugin_dir_url( __FILE__ ) . 'static/style.css',
+      null, // No dependencies
+      self::VERSION // Cache buster
+    );
+
+    // normalize attribute keys, lowercase
+    $atts = array_change_key_case((array)$atts, CASE_LOWER);
+    // override default attributes with user attributes
+    $parsed_atts = shortcode_atts([], $atts, $tag);
+
+    $filename = '/templates/cards.php';
+
+    ob_start();
+    require_once(dirname(__FILE__) . $filename);
+    return ob_get_clean();
+  }
+
+  /**
+   * Create Custom Taxonomies for Travelcard
+   */
+  public static function createTaxonomies() {
+    // Add new taxonomy, make it hierarchical (like categories)
+    $labels = array(
+      'name'              => _x( 'Card Categories', 'taxonomy general name', 'textdomain' ),
+      'singular_name'     => _x( 'Card Category', 'taxonomy singular name', 'textdomain' ),
+      'search_items'      => __( 'Search Card Categories', 'textdomain' ),
+      'all_items'         => __( 'All Card Categories', 'textdomain' ),
+      'parent_item'       => __( 'Parent Card Category', 'textdomain' ),
+      'parent_item_colon' => __( 'Parent Card Category:', 'textdomain' ),
+      'edit_item'         => __( 'Edit Card Category', 'textdomain' ),
+      'update_item'       => __( 'Update Card Category', 'textdomain' ),
+      'add_new_item'      => __( 'Add New Card Category', 'textdomain' ),
+      'new_item_name'     => __( 'New Card Category Name', 'textdomain' ),
+      'menu_name'         => __( 'Card Category', 'textdomain' ),
+    );
+
+    $args = array(
+      'hierarchical'      => true,
+      'labels'            => $labels,
+      'show_ui'           => true,
+      'show_admin_column' => true,
+      'query_var'         => true,
+      'rewrite'           => array( 'slug' => 'card_category' ),
+      'capabilities'      => array(
+        'manage_terms' => 'edit_travelcards',
+        'edit_terms'   => 'edit_travelcards',
+        'delete_terms' => 'edit_travelcards',
+        'assign_terms' => 'edit_travelcards'
+      )
+    );
+
+    register_taxonomy( 'card_category', array( 'travelcard' ), $args );
+
+    // Add 'card tags' taxonomy
+    $labels = array(
+      'name'                       => _x( 'Card Tags', 'taxonomy general name', 'textdomain' ),
+      'singular_name'              => _x( 'Card Tag', 'taxonomy singular name', 'textdomain' ),
+      'search_items'               => __( 'Search Card Tags', 'textdomain' ),
+      'popular_items'              => __( 'Popular Card Tags', 'textdomain' ),
+      'all_items'                  => __( 'All Card Tags', 'textdomain' ),
+      'parent_item'                => null,
+      'parent_item_colon'          => null,
+      'edit_item'                  => __( 'Edit Card Tag', 'textdomain' ),
+      'update_item'                => __( 'Update Card Tag', 'textdomain' ),
+      'add_new_item'               => __( 'Add New Card Tag', 'textdomain' ),
+      'new_item_name'              => __( 'New Card Tag Name', 'textdomain' ),
+      'separate_items_with_commas' => __( 'Separate card tags with commas', 'textdomain' ),
+      'add_or_remove_items'        => __( 'Add or remove card tags', 'textdomain' ),
+      'choose_from_most_used'      => __( 'Choose from the most used card tags', 'textdomain' ),
+      'not_found'                  => __( 'No card tags found.', 'textdomain' ),
+      'menu_name'                  => __( 'Card Tags', 'textdomain' ),
+    );
+
+    $args = array(
+      'hierarchical'          => false,
+      'labels'                => $labels,
+      'show_ui'               => true,
+      'show_admin_column'     => true,
+      'update_count_callback' => '_update_post_term_count',
+      'query_var'             => true,
+      'rewrite'               => array( 'slug' => 'card_tag' ),
+      'capabilities'      => array(
+        'manage_terms' => 'edit_travelcards',
+        'edit_terms'   => 'edit_travelcards',
+        'delete_terms' => 'edit_travelcards',
+        'assign_terms' => 'edit_travelcards'
+      )
+    );
+
+    register_taxonomy( 'card_tag', 'travelcard', $args );
+  }
+
+  /**
+   * AJAX call to fetch cards
+   * GET parameters: search, category, tag
+   */
+  public static function ajaxSearchCards () {
     $args = [
-      'post_type' => 'travelcard',
-      'post_status' => 'publish',
-      'numberposts' => 1
+        'post_type' => 'travelcard',
+        'post_status' => 'publish',
+        'numberposts' => -1
     ];
-    $sticky_card = get_posts($args);
-    $sticky_card = $sticky_card[0];
-  } else {
-    $sticky_card = get_post($sticky_id);
+
+    $category = isset($_GET['category']) ? $_GET['category'] : null;
+    $tag = isset($_GET['tag']) ? $_GET['tag'] : null;
+    if ($tag && $category) {
+      $args['tax_query'] = array(
+        'relation' => 'AND',
+        array(
+            'taxonomy' => 'card_category',
+            'field' => 'slug',
+            'terms' => $category,
+        ),
+        array(
+            'taxonomy' => 'card_tag',
+            'field' => 'slug',
+            'terms' => $tag,
+        )
+      );
+    } elseif ($tag) {
+      
+      $args['tax_query'] = array(
+        array(
+            'taxonomy' => 'card_tag',
+            'field' => 'slug',
+            'terms' => $tag,
+        )
+      );
+    } elseif ($category) {
+      $args['tax_query'] = array(
+        array(
+            'taxonomy' => 'card_category',
+            'field' => 'slug',
+            'terms' => $category,
+        )
+      );
+    }
+    $search = isset($_GET['search']) ? $_GET['search'] : null;
+    if ($search) {
+      $args['s'] = $search;
+    }
+
+    $posts  = get_posts($args);
+    
+    include __DIR__ . '/templates/cards-ajax.php';
+    wp_die();
   }
-  
-  ob_start();
-  require_once(dirname(__FILE__) . $filename);
-  return ob_get_clean();   
-}
 
-/**
- * AJAX call to make this travelcard 'sticky'
- */
-add_action('wp_ajax_ege_cards_make_sticky', 'ege_cards_make_sticky');
-function ege_cards_make_sticky () {
-  $data = array();
-  if (!isset($_POST['id'])){
-    $data['error'] = 'No Card ID!';
-  } elseif (!preg_match('/^[0-9]+$/', $_POST['id'])) {
-    $data['error'] = 'Invalid Card ID';
-  } else {
-    update_option('ege_cards_sticky_id', $_POST['id']);
-    $data['status'] = 'success';
+  /**
+   * Add hack to hide other meta boxes
+   * @param  Array      $hidden
+   * @param  WP_Screen  $screen
+   * @param  Bool       $use_defaults
+   * @return Array
+   */
+  public static function filterHiddenBoxes ($hidden, $screen, $use_defaults) {
+    global $wp_meta_boxes;
+    $cpt = 'travelcard';
+    $keep = array('postexcerpt', 'postimagediv', 'tagsdiv-card_tag', 'card_categorydiv', 'submitdiv', 'ege_card_meta');
+    if( $cpt === $screen->id && isset( $wp_meta_boxes[$cpt] ) ){
+      $tmp = array();
+      foreach( (array) $wp_meta_boxes[$cpt] as $context_key => $context_item ){
+        foreach( $context_item as $priority_key => $priority_item ){
+          foreach( $priority_item as $metabox_key => $metabox_item )
+            if (!in_array($metabox_key, $keep)) {
+              $tmp[] = $metabox_key;
+            }
+        }
+      }
+      $hidden = $tmp;  // Override the current user option here.
+    }
+    return $hidden;
   }
-  wp_send_json($data);
-}
 
-/**
- * https://codex.wordpress.org/Javascript_Reference/ThickBox
- */
-add_action('media_buttons', 'ege_cards_add_custom_link_button', 15);
-function ege_cards_add_custom_link_button() {
-  global $wpdb; // {$wpdb->prefix}
-  $results = $wpdb->get_results( "SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2 FROM {$wpdb->prefix}posts as post LEFT JOIN {$wpdb->prefix}postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN {$wpdb->prefix}postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' WHERE post.post_type = 'travelcard' AND post.post_status = 'publish'", OBJECT );
+  /**
+   * Display 'sticky' travelcard
+   */
+  public static function stickyWidgetShortcode ($atts = [], $content = '', $tag = ''){
+    wp_enqueue_style(
+      'ege_cards',
+      plugin_dir_url( __FILE__ ) . 'static/style.css',
+      null, // No depend
+      self::VERSION // Cache buster
+    );
 
-  // SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2 FROM wp_posts as post LEFT JOIN wp_postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN wp_postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' where post.post_type = 'travelcard' AND post.post_status = 'publish'
-  include __DIR__ . '/templates/card-link-inserter.php';
-}
+    // normalize attribute keys, lowercase
+    $atts = array_change_key_case((array)$atts, CASE_LOWER);
+    // override default attributes with user attributes
+    $parsed_atts = shortcode_atts([], $atts, $tag);
 
-/**
- * Add shortcode for in-post deep link
- */
-add_shortcode('ege_cards_link', 'ege_cards_link_shortcode');
-function ege_cards_link_shortcode($atts = [], $content = '', $tag = ''){
-  // normalize attribute keys, lowercase
-  $atts = array_change_key_case((array)$atts, CASE_LOWER);
-  // override default attributes with user attributes
-  $parsed_atts = shortcode_atts([], $atts, $tag);
+    $filename = '/templates/sticky-card.php';
+    
+    $sticky_id = get_option('ege_cards_sticky_id', 0);
+    if (!$sticky_id) {
+      $args = [
+        'post_type' => 'travelcard',
+        'post_status' => 'publish',
+        'numberposts' => 1
+      ];
+      $sticky_card = get_posts($args);
+      $sticky_card = $sticky_card[0];
+    } else {
+      $sticky_card = get_post($sticky_id);
+    }
+    
+    ob_start();
+    require_once(dirname(__FILE__) . $filename);
+    return ob_get_clean();   
+  }
 
-  // get the ID from shortcode atts
-  $id = $atts['id'];
-  if (!$id) return '<a href="#">[incorrect ID]</a>';
+  /**
+   * AJAX call to make this travelcard 'sticky'
+   */
+  public static function ajaxMakeSticky () {
+    $data = array();
+    if (!isset($_POST['id'])){
+      $data['error'] = 'No Card ID!';
+    } elseif (!preg_match('/^[0-9]+$/', $_POST['id'])) {
+      $data['error'] = 'Invalid Card ID';
+    } else {
+      update_option('ege_cards_sticky_id', $_POST['id']);
+      $data['status'] = 'success';
+    }
+    wp_send_json($data);
+  }
 
-  // find card in database
-  $card = get_post($atts['id']);
-  // make sure POST is a 'travelcard'
-  if (!$card || $card->post_type !== 'travelcard') return '<a href="#">[not found]</a>';
-  // retrieve meta for card
-  $meta = get_post_meta($card->ID);
-  // set caption
-  $caption = $atts['caption'];
-  $caption = $caption ? $meta[$caption] : null;
-  $caption = $caption ? $caption[0] : $card->post_title;
-  // set url
-  $url = $meta['deep_link'];
-  $url = $url ? $url[0] : '#';
-  // build HTML
-  $url = ege_cards_redirect_url($url, $id);
-  return '<a href="' . $url . '">' . $caption . '</a>';
-}
+  public static function sanitizeBoolean( $input ){
+    return isset( $input ) ? true : false;
+  }
 
-add_action( 'admin_enqueue_scripts', 'ege_cards_add_admin_scripts', 10, 1 );
-function ege_cards_add_admin_scripts(){
-  global $ege_cards_config;
-  wp_enqueue_script('ege_cards_admin', plugin_dir_url( __FILE__ ) . 'static/admin.js', null, $ege_cards_config['version']);
-}
+  public static function useRedirectHtmlCallback(){
+    $value = get_option('ege_cards_use_redirect', false);
+    ?>
+    <input type="checkbox" name="ege_cards_use_redirect" value="1" <?php checked($value); ?>" />
+    <?php
+  }
 
-add_filter('manage_travelcard_posts_columns' , 'ege_cards_add_columns');
-function ege_cards_add_columns($columns) {
-  // unset($columns['author']);
-  return array_merge($columns, 
-    array(
-      'page_displays' => 'Page Displays',
-      'click_count' => 'Click Count'
-    )
-  );
-}
+  public static function settingsHtmlCallback(){
+    ?>
+    <p>These are settings for the Travelcards plugin</p>
+    <?php
+  }
 
-add_action( 'manage_posts_custom_column' , 'ege_cards_custom_columns', 10, 2 );
-function ege_cards_custom_columns( $column, $post_id ) {
-  global $wpdb; // {$wpdb->prefix}
-  switch ( $column ) {
-    case 'click_count':
-      $val = get_post_meta($post_id, 'link_click_cnt', true);
-      $val = preg_match('/^[0-9]+$/', $val) ? $val : 0;
-      echo $val;
-      break;
-    case 'page_displays':
-      $likeStr = '%[ege\_cards\_link_id="' . $post_id . '"%';
-      $count = $wpdb->get_var( "SELECT COUNT(*) as count FROM wp_posts WHERE post_type IN ('post', 'page') AND post_status = 'publish' AND post_content LIKE '" . $likeStr . "';" );
-      echo $count;
-      break;
+  public static function registerSettings () {
+    register_setting( 'general', 'ege_cards_use_redirect', [self::class, 'sanitizeBoolean'] );
+
+    add_settings_section(
+      'ege_cards_settings', // ID
+      'Travelcards Settings', // Section title
+      [self::class, 'settingsHtmlCallback'], // Callback for your function
+      'general' // Location (Settings > General)
+    );
+
+    add_settings_field(
+      'ege_cards_use_redirect',
+      'Enable Travelcard click counting',
+      [self::class, 'useRedirectHtmlCallback'],
+      'general',
+      'ege_cards_settings'
+    );
+  }
+
+  /**
+   * https://codex.wordpress.org/Javascript_Reference/ThickBox
+   */
+  public static function addCustomLinkButton() {
+    global $wpdb;
+    $results = $wpdb->get_results( "SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2 FROM {$wpdb->prefix}posts as post LEFT JOIN {$wpdb->prefix}postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN {$wpdb->prefix}postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' WHERE post.post_type = 'travelcard' AND post.post_status = 'publish'", OBJECT );
+
+    include __DIR__ . '/templates/card-link-inserter.php';
+  }
+
+  /**
+   * Add shortcode for in-post deep link
+   */
+  public static function linkShortcode($atts = [], $content = '', $tag = ''){
+    // normalize attribute keys, lowercase
+    $atts = array_change_key_case((array)$atts, CASE_LOWER);
+    // override default attributes with user attributes
+    $parsed_atts = shortcode_atts([], $atts, $tag);
+
+    // get the ID from shortcode atts
+    $id = $atts['id'];
+    if (!$id) return '<a href="#">[incorrect ID]</a>';
+
+    // find card in database
+    $card = get_post($atts['id']);
+    // make sure POST is a 'travelcard'
+    if (!$card || $card->post_type !== 'travelcard') return '<a href="#">[not found]</a>';
+    // retrieve meta for card
+    $meta = get_post_meta($card->ID);
+    // set caption
+    $caption = $atts['caption'];
+    $caption = $caption ? $meta[$caption] : null;
+    $caption = $caption ? $caption[0] : $card->post_title;
+    // set url
+    $url = $meta['deep_link'];
+    $url = $url ? $url[0] : '#';
+    // build HTML
+    $url = self::createRedirectUrl($url, $id);
+    return '<a href="' . $url . '">' . $caption . '</a>';
+  }
+
+  /**
+   * Remember to 'flush' rewrite rules upon changes
+   * >> settings->permalinks->save (without making changes)
+   */
+  public static function addCustomRewriteRule() {
+    add_rewrite_rule(
+      '^travelcard_redirect',
+      'wp-content/plugins/ege-cards-plugin/redirect.php',
+      'top'
+    );
+  }
+
+  public static function addAdminScripts(){
+    wp_enqueue_script(
+      'ege_cards_admin',
+      plugin_dir_url( __FILE__ ) . 'static/admin.js',
+      null,
+      self::VERSION
+    );
+  }
+
+  public static function addColumns($columns) {
+    // unset($columns['author']);
+    return array_merge($columns, 
+      array(
+        'page_displays' => 'Page Displays',
+        'click_count' => 'Click Count'
+      )
+    );
+  }
+
+  public static function customColumns( $column, $post_id ) {
+    global $wpdb; // {$wpdb->prefix}
+    switch ( $column ) {
+      case 'click_count':
+        $val = get_post_meta($post_id, 'link_click_cnt', true);
+        $val = preg_match('/^[0-9]+$/', $val) ? $val : 0;
+        echo $val;
+        break;
+      case 'page_displays':
+        $likeStr = '%[ege\_cards\_link_id="' . $post_id . '"%';
+        $count = $wpdb->get_var( "SELECT COUNT(*) as count FROM wp_posts WHERE post_type IN ('post', 'page') AND post_status = 'publish' AND post_content LIKE '" . $likeStr . "';" );
+        echo $count;
+        break;
+    }
+  }
+
+  public static function createRedirectUrl($url, $id){
+    if (get_option('ege_cards_use_redirect', false)) {
+      return get_site_url() . '/travelcard_redirect?url=' . urlencode($url) . '&id=' . $id;
+    }
+    return $url;
   }
 }
 
-function ege_cards_redirect_url($url, $id){
-  if (get_option('ege_cards_use_redirect', false)) {
-    return get_site_url() . '/travelcard_redirect?url=' . urlencode($url) . '&id=' . $id;
-  }
-  return $url;
-}
-
-/**
- * Remember to 'flush' rewrite rules upon changes
- * >> settings->permalinks->save (without making changes)
- */
-add_action('init', 'ege_cards_custom_rewrite_rule');
-function ege_cards_custom_rewrite_rule() {
-  add_rewrite_rule('^travelcard_redirect', 'wp-content/plugins/ege-cards-plugin/redirect.php', 'top');
-}
-
-function ege_cards_sanitize_boolean( $input ){
-  return isset( $input ) ? true : false;
-}
-function ege_cards_use_redirect_html_callback(){
-  $value = get_option('ege_cards_use_redirect', false);
-  ?>
-  <input type="checkbox" name="ege_cards_use_redirect" value="1" <?php checked($value); ?>" />
-  <?php
-}
-function ege_cards_settings_html_callback(){
-  ?>
-  <p>These are settings for the Travelcards plugin</p>
-  <?php
-}
-add_action('admin_init', 'ege_cards_settings');
-function ege_cards_settings () {
-  register_setting( 'general', 'ege_cards_use_redirect', 'ege_cards_sanitize_boolean' );
-
-  add_settings_section(
-    'ege_cards_settings', // ID
-    'Travelcards Settings', // Section title
-    'ege_cards_settings_html_callback', // Callback for your function
-    'general' // Location (Settings > Permalinks)
-  );
-
-  add_settings_field(
-    'ege_cards_use_redirect',
-    'Enable Travelcard click counting',
-    'ege_cards_use_redirect_html_callback',
-    'general',
-    'ege_cards_settings'
-  );
-}
+new EgeCardsPlugin();
