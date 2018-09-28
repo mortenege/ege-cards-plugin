@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20180924
+Version:      20180928
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,9 +11,9 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  public const VERSION = '20180924';
+  const VERSION = '20180928';
 
-  public const META = array(
+  const META = array(
     'callout' => 'Callout text',
     'long_title' => 'Long Title',
     'deep_link' => 'Deep Link',
@@ -40,6 +40,8 @@ class EgeCardsPlugin {
     add_shortcode( 'ege_cards_sticky_card', [self::class, 'stickyWidgetShortcode'] );
     add_shortcode( 'ege_cards_link', [self::class, 'linkShortcode'] );
 
+    add_shortcode( 'ege_cards_disclaimer', [self::class, 'disclaimerShortcode'] );
+
     // AJAX
     add_action( 'wp_ajax_nopriv_ege_cards_search_cards', [self::class, 'ajaxSearchCards'] );
     add_action( 'wp_ajax_ege_cards_search_cards', [self::class, 'ajaxSearchCards'] );
@@ -63,6 +65,10 @@ class EgeCardsPlugin {
 
     // Add button to POST edit text area
     add_action('media_buttons', [self::class, 'addCustomLinkButton'], 15);
+    
+    // Add disclaimer metabox
+    add_action( 'add_meta_boxes', array(self::class, 'addDisclaimerMetaBox' ));
+    add_action( 'save_post', [self::class, 'savePostMeta']);
 
     // Enqueue admin sctipts
     add_action( 'admin_enqueue_scripts', [self::class, 'addAdminScripts'], 10, 1 );
@@ -268,6 +274,26 @@ class EgeCardsPlugin {
     );
   }
 
+  public static function addDisclaimerMetaBox () {
+    add_meta_box(
+      'ege_cards_disclaimer_mb',
+      'Travelcard Disclaimer',
+      [self::class, 'mbDisclaimerHtml'],
+      ['post', 'page'],
+      'side'
+    );  
+  }
+
+  public static function mbDisclaimerHtml (WP_Post $post) {
+    $value = get_post_meta($post->ID, 'ege_cards_disclaimer', true);
+    ?>
+    <label for="ege_cards_disclaimer">
+      <input type="checkbox" id="ege_cards_disclaimer" name="ege_cards_disclaimer" value="1" <?php checked($value); ?> />
+      Add Disclaimer to this post
+    </label>
+    <?php
+  }
+
   /**
    * Change the placeholder of the POST edit title
    * @param  String $title
@@ -344,6 +370,18 @@ class EgeCardsPlugin {
     return $bulk_messages;
   }
 
+  public static function savePostMeta ($post_id) {
+    if (array_key_exists('ege_cards_disclaimer', $_POST)) {
+      update_post_meta(
+        $post_id,
+        'ege_cards_disclaimer',
+        $_POST['ege_cards_disclaimer']
+      );
+    } else {
+      delete_post_meta($post_id, 'ege_cards_disclaimer');
+    }
+  }
+
   /**
    * 'Save POST' hook
    * @param  Integer $post_id
@@ -376,6 +414,26 @@ class EgeCardsPlugin {
           delete_post_meta($post_id, $field_name);
       }
     }
+  }
+
+  public static function disclaimerShortcode ($atts = []) {
+    $post_has_disclaimer = get_post_meta(get_the_ID(), 'ege_cards_disclaimer', true);
+    if (!$post_has_disclaimer) return '';
+    $atts = array_change_key_case((array)$atts, CASE_LOWER);
+    // override default attributes with user attributes
+    $parsed_atts = shortcode_atts([
+      'type' => 'top'
+    ], $atts, $tag);
+
+    if ($parsed_atts['type'] === 'top') {
+      $value = get_option('ege_cards_disclaimer_1', '');
+    } elseif ($parsed_atts['type'] === 'bottom') {
+      $value = get_option('ege_cards_disclaimer_2', '');
+    }
+
+    ?>
+    <p class="ege-disclaimer"><?= $value; ?></p>
+    <?php
   }
 
   /**
@@ -631,6 +689,13 @@ class EgeCardsPlugin {
     <?php
   }
 
+  public static function disclaimerTextareaHtml ($name) {
+    $value = get_option($name, '');
+    ?>
+    <textarea name="<?= $name; ?>" style="width:100%;height:100px;"><?= $value; ?></textarea>
+    <?php
+  }
+
   public static function registerSettings () {
     register_setting( 'general', 'ege_cards_use_redirect', [self::class, 'sanitizeBoolean'] );
 
@@ -645,6 +710,24 @@ class EgeCardsPlugin {
       'ege_cards_use_redirect',
       'Enable Travelcard click counting',
       [self::class, 'useRedirectHtmlCallback'],
+      'general',
+      'ege_cards_settings'
+    );
+
+    register_setting( 'general', 'ege_cards_disclaimer_1' );
+    add_settings_field(
+      'ege_cards_disclaimer_1',
+      'Disclaimer top',
+      function () { self::disclaimerTextareaHtml('ege_cards_disclaimer_1'); },
+      'general',
+      'ege_cards_settings'
+    );
+
+    register_setting( 'general', 'ege_cards_disclaimer_2' );
+    add_settings_field(
+      'ege_cards_disclaimer_2',
+      'Disclaimer bottom',
+      function () { self::disclaimerTextareaHtml('ege_cards_disclaimer_2'); },
       'general',
       'ege_cards_settings'
     );
