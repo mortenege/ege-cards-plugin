@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20180928
+Version:      20181005
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,7 +11,7 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20180928';
+  const VERSION = '20181005';
 
   const META = array(
     'callout' => 'Callout text',
@@ -58,7 +58,7 @@ class EgeCardsPlugin {
     add_filter( 'bulk_post_updated_messages', [self::class, 'postBulkMessages'], 10, 2 );
 
     // Custom POST save
-    add_action('save_post', 'saveCard');
+    add_action('save_post', [self::class, 'saveCard']);
 
     // Hack to remove uncessecary meta boxes
     add_filter( 'hidden_meta_boxes', [self::class, 'filterHiddenBoxes'], 10, 3 );
@@ -67,7 +67,7 @@ class EgeCardsPlugin {
     add_action('media_buttons', [self::class, 'addCustomLinkButton'], 15);
     
     // Add disclaimer metabox
-    add_action( 'add_meta_boxes', array(self::class, 'addDisclaimerMetaBox' ));
+    add_action( 'add_meta_boxes', array(self::class, 'addDisclaimerMetaBox' ), 1000);
     add_action( 'save_post', [self::class, 'savePostMeta']);
 
     // Enqueue admin sctipts
@@ -280,7 +280,8 @@ class EgeCardsPlugin {
       'Travelcard Disclaimer',
       [self::class, 'mbDisclaimerHtml'],
       ['post', 'page'],
-      'side'
+      'side',
+      'high'
     );  
   }
 
