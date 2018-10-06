@@ -24,7 +24,9 @@ $sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
     <a href="<?= $sticky_card_deep_link; ?>" target="_blank" class="ege-sticky-apply-btn">Apply now</a>
   </div>
 
+  <?php if ($sticky_params_short !== true): ?>
   <hr />
+
   <div style="position: relative;">
     <div class="phase">
       <?= $sticky_card->post_content; ?>
@@ -32,7 +34,9 @@ $sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
   </div>
 
   <button class="ege-sticky-read-more-btn">Read More</button>
+  <?php endif; ?>
 </div>
+
 
 <script>
 jQuery(document).ready(function($){
