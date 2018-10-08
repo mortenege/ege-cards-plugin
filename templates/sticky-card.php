@@ -21,7 +21,7 @@ $sticky_card_deep_link = $sticky_card_deep_link ? $sticky_card_deep_link : '#';
   </div>
   
   <div style="margin-bottom:10px;">
-    <a href="<?= $sticky_card_deep_link; ?>" target="_blank" class="ege-sticky-apply-btn">Apply now</a>
+    <a href="<?= $sticky_card_deep_link; ?>" target="_blank" class="ege-sticky-apply-btn">Learn More</a>
   </div>
 
   <?php if ($sticky_params_short !== true): ?>

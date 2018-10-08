@@ -11,17 +11,21 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20181008';
+  const VERSION = '201810081';
 
   const META = array(
-    'callout' => 'Callout text',
-    'long_title' => 'Long Title',
-    'deep_link' => 'Deep Link',
+    'callout' => 'Table Top Callout',
+    'long_title' => 'Below Article Widget Title',
+    'deep_link' => 'Widget Deeplink',
+    'deep_link_2' => 'Article Deeplink',
     'term_link' => 'Link to Terms',
-    'annual_fee' => 'Annual Fee text',
-    'bonus_value' => 'Bonus value text',
-    'official_name_1' => 'Official Name #1',
-    'official_name_2' => 'Official Name #2'
+    'annual_fee' => 'Annual Fee Information',
+    'bonus_value' => 'Table Bonus Text',
+    'official_name_1' => 'Compliance Name #1',
+    'official_name_2' => 'Compliance Name #2',
+    'official_name_3' => 'Compliance Name #3',
+    'official_name_4' => 'Compliance Name #4',
+    'official_name_5' => 'Compliance Name #5'
   );
 
   public function __construct(){
@@ -745,7 +749,7 @@ class EgeCardsPlugin {
    */
   public static function addCustomLinkButton() {
     global $wpdb;
-    $results = $wpdb->get_results( "SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2 FROM {$wpdb->prefix}posts as post LEFT JOIN {$wpdb->prefix}postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN {$wpdb->prefix}postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' WHERE post.post_type = 'travelcard' AND post.post_status = 'publish'", OBJECT );
+    $results = $wpdb->get_results( "SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2, meta3.meta_value as m3, meta4.meta_value as m4, meta5.meta_value as m5 FROM {$wpdb->prefix}posts as post LEFT JOIN {$wpdb->prefix}postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN {$wpdb->prefix}postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' LEFT JOIN {$wpdb->prefix}postmeta AS meta3 ON post.ID = meta3.post_id AND meta3.meta_key = 'official_name_3' LEFT JOIN {$wpdb->prefix}postmeta AS meta4 ON post.ID = meta4.post_id AND meta4.meta_key = 'official_name_4' LEFT JOIN {$wpdb->prefix}postmeta AS meta5 ON post.ID = meta5.post_id AND meta5.meta_key = 'official_name_5' WHERE post.post_type = 'travelcard' AND post.post_status = 'publish'", OBJECT );
 
     include __DIR__ . '/templates/card-link-inserter.php';
   }
@@ -774,7 +778,7 @@ class EgeCardsPlugin {
     $caption = $caption ? $meta[$caption] : null;
     $caption = $caption ? $caption[0] : $card->post_title;
     // set url
-    $url = $meta['deep_link'];
+    $url = $meta['deep_link_2'];
     $url = $url ? $url[0] : '#';
     // build HTML
     $url = self::createRedirectUrl($url, $id);
