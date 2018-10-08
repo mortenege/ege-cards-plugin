@@ -2,6 +2,18 @@
 
 Custom Wordpress plugin for [SimpleFlying.com](https://simpleflying.com)
 
+## Shortcodes
+
+ * `[ege_cards]` shows all the cards in a grid with search functionality
+ * `[ege_cards_sticky_card]` shows the selected **sticky** card.
+    * `short` (boolean) show a short version. Values "true" or "false" 
+    * example `[ege_cards_sticky_card short="true|false"]`
+ * `[ege_cards_disclaimer]` show disclaimer
+    * `type` (string) value "bottom" or "top"
+    * example `[ege_cards_disclaimer type="bottom"]`
+ * `[ege_cards_link id="<ID>"]` where ID is the Id of a Travel Card.
+
+
 ## Wordpress Admin Interface
 
 * Custom `Post type`: *travelcard*

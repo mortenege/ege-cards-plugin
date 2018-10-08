@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20181006
+Version:      20181008
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,7 +11,7 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20181006';
+  const VERSION = '20181008';
 
   const META = array(
     'callout' => 'Callout text',
@@ -38,7 +38,6 @@ class EgeCardsPlugin {
     // Shortcodes
     add_shortcode( 'ege_cards', [self::class, 'basicShortcode'] );
     add_shortcode( 'ege_cards_sticky_card', [self::class, 'stickyWidgetShortcode'] );
-    add_shortcode( 'ege_cards_sticky_card_short', [self::class, 'stickyShortWidgetShortcode'] );
     add_shortcode( 'ege_cards_link', [self::class, 'linkShortcode'] );
 
     add_shortcode( 'ege_cards_disclaimer', [self::class, 'disclaimerShortcode'] );
@@ -636,7 +635,13 @@ class EgeCardsPlugin {
     // normalize attribute keys, lowercase
     $atts = array_change_key_case((array)$atts, CASE_LOWER);
     // override default attributes with user attributes
-    $parsed_atts = shortcode_atts([], $atts, $tag);
+    $parsed_atts = shortcode_atts([
+      'short' => false
+    ], $atts, $tag);
+
+    $parsed_atts['short'] = $parsed_atts['short'] === 'true' ? true : false;
+    $parsed_atts['short'] = (bool) $parsed_atts['short'];
+    $sticky_params_short = $parsed_atts['short'];
 
     $filename = '/templates/sticky-card.php';
     
@@ -653,45 +658,6 @@ class EgeCardsPlugin {
       $sticky_card = get_post($sticky_id);
     }
     
-    ob_start();
-    require_once(dirname(__FILE__) . $filename);
-    return ob_get_clean();   
-  }
-
-  /**
-   * Display SHORT 'sticky' travelcard
-   */
-  public static function stickyShortWidgetShortcode ($atts = [], $content = '', $tag = ''){
-    wp_enqueue_style(
-      'ege_cards',
-      plugin_dir_url( __FILE__ ) . 'static/style.css',
-      null, // No depend
-      self::VERSION // Cache buster
-    );
-
-    // normalize attribute keys, lowercase
-    $atts = array_change_key_case((array)$atts, CASE_LOWER);
-    // override default attributes with user attributes
-    $parsed_atts = shortcode_atts([], $atts, $tag);
-
-    $filename = '/templates/sticky-card.php';
-    
-    // Get Card
-    $sticky_id = get_option('ege_cards_sticky_id', 0);
-    if (!$sticky_id) {
-      $args = [
-        'post_type' => 'travelcard',
-        'post_status' => 'publish',
-        'numberposts' => 1
-      ];
-      $sticky_card = get_posts($args);
-      $sticky_card = $sticky_card[0];
-    } else {
-      $sticky_card = get_post($sticky_id);
-    }
-    
-    $sticky_params_short = true;
-
     ob_start();
     require_once(dirname(__FILE__) . $filename);
     return ob_get_clean();   
