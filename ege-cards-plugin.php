@@ -43,7 +43,6 @@ class EgeCardsPlugin {
     add_shortcode( 'ege_cards', [self::class, 'basicShortcode'] );
     add_shortcode( 'ege_cards_sticky_card', [self::class, 'stickyWidgetShortcode'] );
     add_shortcode( 'ege_cards_link', [self::class, 'linkShortcode'] );
-
     add_shortcode( 'ege_cards_disclaimer', [self::class, 'disclaimerShortcode'] );
 
     // AJAX
@@ -761,25 +760,33 @@ class EgeCardsPlugin {
     // normalize attribute keys, lowercase
     $atts = array_change_key_case((array)$atts, CASE_LOWER);
     // override default attributes with user attributes
-    $parsed_atts = shortcode_atts([], $atts, $tag);
+    $parsed_atts = shortcode_atts([
+      'id' => null,
+      'caption' => 'official_name_1'
+    ], $atts, $tag);
 
     // get the ID from shortcode atts
-    $id = $atts['id'];
+    $id = $parsed_atts['id'];
     if (!$id) return '<a href="#">[incorrect ID]</a>';
 
     // find card in database
-    $card = get_post($atts['id']);
+    $card = get_post($id);
     // make sure POST is a 'travelcard'
     if (!$card || $card->post_type !== 'travelcard') return '<a href="#">[not found]</a>';
     // retrieve meta for card
     $meta = get_post_meta($card->ID);
+
     // set caption
-    $caption = $atts['caption'];
-    $caption = $caption ? $meta[$caption] : null;
-    $caption = $caption ? $caption[0] : $card->post_title;
+    $caption = $parsed_atts['caption'];
+    if (preg_match('/^official\_name\_[0-5]$/', $caption)) {
+      $caption = $caption ? $meta[$caption] : null;
+      $caption = $caption ? $caption[0] : $card->post_title;
+    }
+
     // set url
     $url = $meta['deep_link_2'];
     $url = $url ? $url[0] : '#';
+    
     // build HTML
     $url = self::createRedirectUrl($url, $id);
     return '<a href="' . $url . '">' . $caption . '</a>';
