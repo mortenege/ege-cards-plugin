@@ -51,9 +51,17 @@ jQuery(document).ready(function($){
           }  
         }
 
+        let btn = $('<btn class="ege-cards-link-inserter-btn">')
+          .attr('data-travelcard-id', obj.ID)
+          .attr('data-travelcard-caption', 'EDIT ME! EDIT ME!')
+          .text('Custom');
+        div.append(btn);
+
+        /*
         if (!obj.m1 && !obj.m2 && !obj.m3 && !obj.m4 && !obj.m5) {
           div.append($('<small>').text('No official titles found. Please Edit card.'));
         }
+        */
         resultsContainer.append(div);
       };
     }
