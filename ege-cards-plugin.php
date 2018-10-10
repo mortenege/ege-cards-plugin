@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20181009
+Version:      20181010
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,7 +11,7 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20181009';
+  const VERSION = '20181010';
 
   const META = array(
     'callout' => 'Table Top Callout',
@@ -280,7 +280,7 @@ class EgeCardsPlugin {
   public static function addDisclaimerMetaBox () {
     add_meta_box(
       'ege_cards_disclaimer_mb',
-      'Travelcard Disclaimer',
+      'Travelcard Disclaimer Top',
       [self::class, 'mbDisclaimerHtml'],
       ['post', 'page'],
       'side',
@@ -293,7 +293,7 @@ class EgeCardsPlugin {
     ?>
     <label for="ege_cards_disclaimer">
       <input type="checkbox" id="ege_cards_disclaimer" name="ege_cards_disclaimer" value="1" <?php checked($value); ?> />
-      Add Disclaimer to this post
+      Add Disclaimer to the top of this post
     </label>
     <?php
   }
@@ -422,7 +422,7 @@ class EgeCardsPlugin {
 
   public static function disclaimerShortcode ($atts = []) {
     $post_has_disclaimer = get_post_meta(get_the_ID(), 'ege_cards_disclaimer', true);
-    if (!$post_has_disclaimer) return '';
+    // if (!$post_has_disclaimer) return '';
     $atts = array_change_key_case((array)$atts, CASE_LOWER);
     // override default attributes with user attributes
     $parsed_atts = shortcode_atts([
@@ -430,6 +430,7 @@ class EgeCardsPlugin {
     ], $atts, $tag);
 
     if ($parsed_atts['type'] === 'top') {
+      if (!$post_has_disclaimer) return '';
       $value = get_option('ege_cards_disclaimer_1', '');
     } elseif ($parsed_atts['type'] === 'bottom') {
       $value = get_option('ege_cards_disclaimer_2', '');
