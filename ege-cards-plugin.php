@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20181010
+Version:      20181011
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,13 +11,14 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20181010';
+  const VERSION = '20181011';
 
   const META = array(
     'callout' => 'Table Top Callout',
     'long_title' => 'Below Article Widget Title',
     'deep_link' => 'Widget Deeplink',
     'deep_link_2' => 'Article Deeplink',
+    'text_link' => 'Use text link',
     'term_link' => 'Link to Terms',
     'annual_fee' => 'Annual Fee Information',
     'bonus_value' => 'Table Bonus Text',
@@ -216,12 +217,21 @@ class EgeCardsPlugin {
       <tr>
         <th> <label for="<?= $name; ?>"><?= $text; ?></label></th>
         <td>
+          <?php if ($name !== 'text_link'): ?>
           <input id="<?= $name; ?>"
            name="<?= $name; ?>"
            type="text"
            value="<?= esc_attr($field_values[$name]); ?>"
            style="width: 100%;"
            />
+          <?php else: ?>
+          <input id="<?= $name; ?>"
+           name="<?= $name; ?>"
+           type="checkbox"
+           value="1"
+           <?= checked($field_values[$name]); ?>
+           />
+          <?php endif; ?>
         </td>
       </tr>
       <?php endforeach; ?>
@@ -401,6 +411,10 @@ class EgeCardsPlugin {
     // Secure with nonce field check
     //if( ! check_admin_referer('ege_card_nonce', 'ege_card_nonce') )
     //    return;
+    //    
+    if (!array_key_exists('text_link', $_POST)){
+        delete_post_meta($post_id, 'text_link');
+    }
 
     $field_names = self::META;
     foreach ($field_names as $field_name => $text) {
