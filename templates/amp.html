@@ -1,0 +1,119 @@
+
+<div id="ege-sticky-card">
+  
+  <a href="[DEEP_LINK]" target="_blank" class="ege-sticky-title">[TITLE]</a>
+  
+  <div class="ege-sticky-table">
+    <div class="ege-sticky-excerpt">[EXCERPT]</div>
+    <div class="ege-sticky-travelcard-container">
+      <a href="[DEEP_LINK]" target="_blank" class="ege-sticky-travelcard" style="background-image: url('[LINK_TO_IMAGE]');"></a>
+    </div>
+  </div>
+  
+  <div style="margin-bottom:10px;text-align:center;">
+    <a href="[DEEP_LINK]"" target="_blank" style="text-decoration: underline;font-size:1.2em">Learn more about this card</a>
+  </div>
+  
+  <div style="margin-bottom:10px;">
+    <a href="[DEEP_LINK]" target="_blank" class="ege-sticky-apply-btn">Learn More</a>
+  </div>
+</div>
+
+<style type="text/css">
+  /* Sticky Cards */
+#ege-sticky-card {
+  width: 100%;
+  background-color: #FFF;
+  font-family: "Welsheim", Arial, Helvetica, sans serif;
+  color: rgb(32, 32, 38);
+  border: 1px solid rgb(229, 229, 229);
+  border-top: 5px solid rgb(32, 32, 38);
+  padding: 5px;
+}
+#ege-sticky-card .ege-sticky-title {
+  display: block;
+  font-size: 30px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 36px;
+  margin-bottom: 20px;
+  color: rgb(32, 32, 38);
+}
+
+#ege-sticky-card .ege-sticky-title:hover {
+  text-decoration: underline;
+}
+
+#ege-sticky-card .ege-sticky-table {
+  display: block;
+  margin-bottom: 20px;
+}
+#ege-sticky-card .ege-sticky-excerpt {
+  display: block;
+  width: 100%;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 200;
+  line-height: 33px;
+  margin-bottom: 20px;
+}
+#ege-sticky-card .ege-sticky-travelcard-container {
+  display: block;
+  width: 100%;
+}
+#ege-sticky-card .ege-sticky-travelcard {
+  display: block;
+  margin: 0 auto;
+  width: 150px;
+  height: 100px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+@media only screen and (min-width: 768px) {
+  #ege-sticky-card {
+    padding: 20px;
+  }
+  #ege-sticky-card .ege-sticky-table {
+    display: table;
+  }
+  #ege-sticky-card .ege-sticky-excerpt {
+    display: table-cell;
+    width: auto;
+    vertical-align: top;
+  }
+  #ege-sticky-card .ege-sticky-travelcard-container {
+    display: table-cell;
+    vertical-align: middle;
+    width: 300px;
+  }
+}
+
+#ege-sticky-card a.ege-sticky-apply-btn,
+#ege-sticky-card a.ege-sticky-apply-btn:hover
+#ege-sticky-card a.ege-sticky-apply-btn:active,
+#ege-sticky-card a.ege-sticky-apply-btn:focus,
+#ege-sticky-card a.ege-sticky-apply-btn:visited {
+  background-color: rgb(42, 42, 68);
+  text-decoration: none;
+  font-family: "Montserrat", Arial, Helvetics, sans serif;
+  font-weight: bold;
+  text-align: center;
+  font-size: 18px;
+  line-height: 22px;
+  color: #FFF;
+  padding: 10px 0px;
+  margin: 0 auto;
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: none;
+  border-radius: 0;
+  transition: border-radius 0.4s;
+}
+
+#ege-sticky-card a.ege-sticky-apply-btn:hover {
+  background-color: #4d7ce4;
+}
+</style>

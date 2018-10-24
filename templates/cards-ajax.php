@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
     $deep_link = $the_meta['deep_link'];
     $deep_link = is_array($deep_link) ? $deep_link[0] : $deep_link;
     $deep_link = $deep_link ? $deep_link : '#';
+    $deep_link = EgeCardsPlugin::createRedirectUrl($deep_link, $post->ID);
     $term_link = $the_meta['term_link'];
     $term_link = is_array($term_link) ? $term_link[0] : $term_link;
     $term_link = $term_link ? $term_link : '#';
@@ -38,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
       <div style="padding-bottom: 100px;"></div>
       
       <div class="ege-card-footer">
-        <a href="<?= EgeCardsPlugin::createRedirectUrl($deep_link, $post->ID); ?>" target="_blank" class="btn ege-card-apply-btn">Learn More</a>
+        <a href="<?= $deep_link ?>" target="_blank" class="btn ege-card-apply-btn">Learn More</a>
         <a href="<?= $term_link; ?>" target="_blank" class="ege-card-terms-link">Terms and Conditions</a>
       </div>
     

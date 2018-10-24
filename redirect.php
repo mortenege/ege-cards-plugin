@@ -24,7 +24,7 @@ if (isset($_GET['id']) && preg_match('/^[0-9]+$/', $_GET['id'])) {
 $url = $url . $_GET['url'];
 
 $base_url = dirname($_SERVER['PHP_SELF']) . '/static/';
-$img2_url = $base_url . 'logo.png';
+$img2_url = $base_url . 'simpleflying-logo.png';
 
 ?>
 
