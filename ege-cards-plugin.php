@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20181020
+Version:      20181113
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,7 +11,7 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20181020';
+  const VERSION = '20181113';
 
   const META = array(
     'callout' => 'Table Top Callout',
@@ -36,20 +36,23 @@ class EgeCardsPlugin {
 
     // Init hook
     add_action( 'init', [self::class, 'createPostType'] );
-    add_action( 'init', [self::class, 'self::createTaxonomies'], 0 );
+    add_action( 'init', [self::class, 'createTaxonomies'], 0 );
     add_action( 'init', [self::class, 'addCustomRewriteRule'] );
     add_action( 'admin_init', [self::class, 'registerSettings'] );
+    add_action( 'admin_menu', [self::class, 'addMenu'] );
 
     // Shortcodes
     add_shortcode( 'ege_cards', [self::class, 'basicShortcode'] );
     add_shortcode( 'ege_cards_sticky_card', [self::class, 'stickyWidgetShortcode'] );
     add_shortcode( 'ege_cards_link', [self::class, 'linkShortcode'] );
     add_shortcode( 'ege_cards_disclaimer', [self::class, 'disclaimerShortcode'] );
+    add_shortcode( 'ege_cards_related', [self::class, 'relatedShortcode'] );
 
     // AJAX
     add_action( 'wp_ajax_nopriv_ege_cards_search_cards', [self::class, 'ajaxSearchCards'] );
     add_action( 'wp_ajax_ege_cards_search_cards', [self::class, 'ajaxSearchCards'] );
     add_action( 'wp_ajax_ege_cards_make_sticky', [self::class, 'ajaxMakeSticky'] );
+    add_action( 'wp_ajax_ege_cards_save_related_links', [self::class, 'saveRelatedLinks']);
 
     // Custom POST title filter
     add_filter( 'enter_title_here', [self::class, 'postTitlePlaceholder'] );
@@ -434,6 +437,56 @@ class EgeCardsPlugin {
     }
   }
 
+  public static function relatedShortcode ($atts = []) {
+    
+    wp_enqueue_style(
+      'ege_cards',
+      plugin_dir_url( __FILE__ ) . 'static/style.css',
+      null, // No dependencies
+      self::VERSION // Cache buster
+    );
+
+    $atts = array_change_key_case((array)$atts, CASE_LOWER);
+    $parsed_atts = shortcode_atts([
+      'id' => '0'
+    ], $atts, $tag);
+
+    if (!preg_match('/^[0-9]+$/', $parsed_atts['id'])) {
+      $id = 0;
+    } else {
+      $id = intval($parsed_atts['id']);
+    }
+
+    $links = get_option('ege_cards_related_links', []);
+
+    $index = null;
+
+    foreach ($links as $i => $link) {
+      if ($link->id == $id) {
+        $index = $i;
+        break;
+      }
+    }
+
+    if ($index !== null) {
+      $link = $links[$index];
+    } elseif (count($links) > 0) {
+      $link = $links[0];
+    } else {
+      return '';
+    }
+    
+    ob_start();
+    ?>
+    <div class="ege-cards-related" style="background-image: url('<?= plugins_url('ege-cards-plugin/static/sf-logo-sm.png'); ?>')">
+      <span class="ege-cards-related--title"><?= $link->title; ?></span>
+      <a href="<?= $link->link; ?>"><?= $link->link_text; ?></a>
+    </div>
+    <?php
+
+    return ob_get_clean();
+  }
+
   public static function disclaimerShortcode ($atts = []) {
     $post_has_disclaimer = get_post_meta(get_the_ID(), 'ege_cards_disclaimer', true);
     // if (!$post_has_disclaimer) return '';
@@ -450,9 +503,8 @@ class EgeCardsPlugin {
       $value = get_option('ege_cards_disclaimer_2', '');
     }
 
-    ?>
-    <p class="ege-disclaimer"><?= $value; ?></p>
-    <?php
+    return '<p class="ege-disclaimer">'.$value.'</p>';
+
   }
 
   /**
@@ -728,32 +780,33 @@ class EgeCardsPlugin {
       'ege_cards_settings', // ID
       'Travelcards Settings', // Section title
       [self::class, 'settingsHtmlCallback'], // Callback for your function
-      'general' // Location (Settings > General)
+      //'general' // Location (Settings > General)
+      'sf_settings'
     );
 
     add_settings_field(
       'ege_cards_use_redirect',
       'Enable Travelcard click counting',
       [self::class, 'useRedirectHtmlCallback'],
-      'general',
+      'sf_settings',
       'ege_cards_settings'
     );
 
-    register_setting( 'general', 'ege_cards_disclaimer_1' );
+    register_setting( 'sf_settings', 'ege_cards_disclaimer_1' );
     add_settings_field(
       'ege_cards_disclaimer_1',
       'Disclaimer top',
       function () { self::disclaimerTextareaHtml('ege_cards_disclaimer_1'); },
-      'general',
+      'sf_settings',
       'ege_cards_settings'
     );
 
-    register_setting( 'general', 'ege_cards_disclaimer_2' );
+    register_setting( 'sf_settings', 'ege_cards_disclaimer_2' );
     add_settings_field(
       'ege_cards_disclaimer_2',
       'Disclaimer bottom',
       function () { self::disclaimerTextareaHtml('ege_cards_disclaimer_2'); },
-      'general',
+      'sf_settings',
       'ege_cards_settings'
     );
   }
@@ -766,6 +819,21 @@ class EgeCardsPlugin {
     $results = $wpdb->get_results( "SELECT post.ID, post.post_title, meta1.meta_value as m1, meta2.meta_value as m2, meta3.meta_value as m3, meta4.meta_value as m4, meta5.meta_value as m5 FROM {$wpdb->prefix}posts as post LEFT JOIN {$wpdb->prefix}postmeta AS meta1 ON post.ID = meta1.post_id AND meta1.meta_key = 'official_name_1' LEFT JOIN {$wpdb->prefix}postmeta AS meta2 ON post.ID = meta2.post_id AND meta2.meta_key = 'official_name_2' LEFT JOIN {$wpdb->prefix}postmeta AS meta3 ON post.ID = meta3.post_id AND meta3.meta_key = 'official_name_3' LEFT JOIN {$wpdb->prefix}postmeta AS meta4 ON post.ID = meta4.post_id AND meta4.meta_key = 'official_name_4' LEFT JOIN {$wpdb->prefix}postmeta AS meta5 ON post.ID = meta5.post_id AND meta5.meta_key = 'official_name_5' WHERE post.post_type = 'travelcard' AND post.post_status = 'publish'", OBJECT );
 
     include __DIR__ . '/templates/card-link-inserter.php';
+
+    // Related links
+    $links = get_option('ege_cards_related_links', []);
+    ?>
+    <div id="ege-cards-related-link-manager" style="display:none;">
+      <p>Insert a 'Related' Link</p>
+      <select id="ege-cards-related-inserter" style="width:100%">
+        <?php foreach ($links as $link): ?>
+          <option value="<?= $link->id; ?>">[<?= $link->id; ?>] <?= $link->title; ?> <?= $link->link_text; ?></option>
+        <?php endforeach; ?>
+      </select>
+      <button class="button" id="ege-cards-related-btn">Choose</button>
+    </div>
+    <a href="#TB_inline?width=400&height=200&inlineId=ege-cards-related-link-manager" class="button thickbox">Insert Related Link</a>
+    <?php
   }
 
   /**
@@ -804,7 +872,7 @@ class EgeCardsPlugin {
     
     // build HTML
     $url = self::createRedirectUrl($url, $id);
-    return '<a href="' . $url . '">' . $caption . '</a>';
+    return '<a href="' . $url . '" class="ege-cards-link">' . $caption . '</a>';
   }
 
   /**
@@ -859,6 +927,51 @@ class EgeCardsPlugin {
       return get_site_url() . '/travelcard_redirect?url=' . urlencode($url) . '&id=' . $id;
     }
     return $url;
+  }
+
+   public static function settingsPageHtmlCallback() {
+    ?>
+
+    <div class="wrap">
+      <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+      <form action="options.php" method="post">
+      <?php
+        settings_fields( 'sf_settings' );
+        do_settings_sections( 'sf_settings' );
+        submit_button( 'Save Settings' );
+      ?>
+      </form>
+    </div>
+    <?php 
+    $filename = '/templates/related-links.php';
+    include dirname(__FILE__) . $filename;
+  }
+
+  public static function addMenu() {
+    add_submenu_page(
+      'edit.php?post_type=travelcard',
+      'SF Settings',
+      'SF Settings',
+      'manage_options',
+      'sf_settings',
+      [self::class, 'settingsPageHtmlCallback']
+    );
+  }
+
+  public static function saveRelatedLinks () {
+    $links = $_POST['links'];
+    if (!isset($links)) wp_send_json_error('Missing property', 400);
+    
+    $links = stripslashes($links);
+    $links = json_decode($links);
+
+    if (!is_array($links)) {
+      wp_send_json_error('Expected array, got ' . gettype($links), 400);  
+    }
+    
+    update_option('ege_cards_related_links', $links);
+    
+    wp_send_json($links);
   }
 }
 

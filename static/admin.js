@@ -2,7 +2,8 @@ jQuery(document).ready(function($){
   var data = window.travelcardData, // load global card data
       searchVal = "", // remember search values
       filteredData = {},  // show these results
-      resultsContainer = $('#ege-cards-link-inserter-results');
+      resultsContainer = $('#ege-cards-link-inserter-results'),
+      related_id = 0
 
   /**
    * Insert SHORTCODE into editor when specific caption is clicked
@@ -11,6 +12,17 @@ jQuery(document).ready(function($){
     var id = $(this).attr('data-travelcard-id');
     var caption = $(this).attr('data-travelcard-caption');
     wp.media.editor.insert('[ege_cards_link id="' + id + '" caption="' + caption + '"]');
+    tb_remove();
+  });
+
+  $('#ege-cards-related-inserter').change(function(event){
+    let id = $(this).val();
+    related_id = id;
+  });
+
+  $('#ege-cards-related-btn').click(function(event){
+    let id = $('#ege-cards-related-inserter').val();
+    wp.media.editor.insert('[ege_cards_related id="' + related_id + '"]');
     tb_remove();
   });
 
