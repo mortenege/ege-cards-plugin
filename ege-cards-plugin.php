@@ -3,7 +3,7 @@
 Plugin Name:  Ege Cards
 Plugin URI:   https://github.com/mortenege/ege-cards-plugin
 Description:  Custom Created widget for SimpleFlying.com
-Version:      20181113
+Version:      20181117
 Author:       Morten Ege Jensen <ege.morten@gmail.com>
 Author URI:   https://github.com/mortenege
 License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
@@ -11,7 +11,7 @@ License:      GPLv2 <https://www.gnu.org/licenses/gpl-2.0.html>
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EgeCardsPlugin {
-  const VERSION = '20181113';
+  const VERSION = '20181117';
 
   const META = array(
     'callout' => 'Table Top Callout',
@@ -192,6 +192,7 @@ class EgeCardsPlugin {
         'supports' => $supports,
         'capability_type' => array('travelcard', 'travelcards'),
         'map_meta_cap' => false,
+        'exclude_from_search' => true,
       )
     );
   }
@@ -478,7 +479,7 @@ class EgeCardsPlugin {
     
     ob_start();
     ?>
-    <div class="ege-cards-related" style="background-image: url('<?= plugins_url('ege-cards-plugin/static/sf-logo-sm.png'); ?>')">
+    <div class="ege-cards-related">
       <span class="ege-cards-related--title"><?= $link->title; ?></span>
       <a href="<?= $link->link; ?>"><?= $link->link_text; ?></a>
     </div>
