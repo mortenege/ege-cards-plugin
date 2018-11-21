@@ -371,8 +371,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', e
   }
 }
 
+}
 /* Related links */
 .ege-cards-related {
+  text-align:left;
   width:100%;
   margin: 20px auto;
   line-height: 22px;
@@ -387,9 +389,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', e
   float:left;
 }
 
-.ege-cards-related--title {
+.ege-cards-related .ege-cards-related--title {
   font-weight: bold;
-  padding-left: 20px;  
+  padding-left: 20px;
+  display:inline;
+  font-size:17px;
 }
 
 .ege-cards-related a {
