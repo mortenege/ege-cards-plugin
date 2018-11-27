@@ -98,10 +98,11 @@ var _links = [
   }
 ]
 */
+var tt="<?= addslashes(json_encode(get_option('ege_cards_related_links', []))) ?>";
 const app = new Vue({
   el: '#vue-app',
   data: {
-    relatedLinks: JSON.parse('<?= json_encode(get_option('ege_cards_related_links', [])) ?>') || [],
+    relatedLinks: JSON.parse(tt) || [],
     dirty: false,
     updating: false,
     editId: null,
